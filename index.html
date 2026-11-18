@@ -66,7 +66,7 @@
 (()=>{
 const $=id=>document.getElementById(id);
 let scenes=[],images=[],masterBlob=null,masterUrl=null,masterDuration=600,rendering=false;
-let voiceUrl=null,musicUrl=null,voiceAudio=null,musicAudio=null,voiceEnabled=true,musicEnabled=true,captionsEnabled=true;
+let voiceUrl=null,musicUrl=null,voiceEnabled=true,musicEnabled=true,captionsEnabled=true;
 const toggle=(id,state)=>{const el=$(id);el.setAttribute('aria-checked',String(state));};
 function formatTime(s){const m=Math.floor(s/60),sec=Math.floor(s%60);return m+':'+String(sec).padStart(2,'0')}
 function updateStats(){
@@ -92,8 +92,8 @@ scenes.forEach((s,i)=>{if(images[i]){s.image=images[i].url;s.imageFile=images[i]
 });
 function setAudio(kind,file){
 if(!file)return;const url=URL.createObjectURL(file);
-if(kind==='voice'){if(voiceUrl)URL.revokeObjectURL(voiceUrl);voiceUrl=url;$('voiceName').textContent=file.name;voiceAudio=new Audio(url);voiceAudio.preload='auto';voiceAudio.loop=false}
-else{if(musicUrl)URL.revokeObjectURL(musicUrl);musicUrl=url;$('musicName').textContent=file.name;musicAudio=new Audio(url);musicAudio.preload='auto';musicAudio.loop=true}
+if(kind==='voice'){if(voiceUrl)URL.revokeObjectURL(voiceUrl);voiceUrl=url;$('voiceName').textContent=file.name}
+else{if(musicUrl)URL.revokeObjectURL(musicUrl);musicUrl=url;$('musicName').textContent=file.name}
 updateStats();
 }
 $('voiceFile').addEventListener('change',e=>setAudio('voice',e.target.files[0]));
@@ -127,7 +127,7 @@ async function makeMaster(){
 if(rendering||!scenes.length){if(!scenes.length)alert('Build at least one scene first.');return}
 rendering=true;cacheImages();const seconds=Number($('runtime').value)*60;masterDuration=seconds;
 const canvas=document.createElement('canvas');canvas.width=1280;canvas.height=720;const ctx=canvas.getContext('2d');const stream=canvas.captureStream(24);
-let recorder;try{recorder=new MediaRecorder(stream,{mimeType:MediaRecorder.isTypeSupported('video/webm;codecs=vp9')?'video/webm;codecs=vp9':'video/webm'})}catch(e){rendering=false;alert('This browser does not support WebM recording. Try Chrome.');return}
+let recorder;try{recorder=new MediaRecorder(stream,{mimeType:MediaRecorder.isTypeSupported('video/webm;codecs=vp9')?'video/webm;codecs=vp9':'video/webm'})}catch(e){rendering=false;$('makeMaster').disabled=false;$('makeMaster').textContent='Create visual master';alert('This browser does not support WebM recording. Try Chrome.');return}
 const chunks=[];recorder.ondataavailable=e=>{if(e.data.size)chunks.push(e.data)};
 recorder.onstop=()=>{const blob=new Blob(chunks,{type:'video/webm'});loadMaster(blob);rendering=false;$('makeMaster').disabled=false;$('makeMaster').textContent='Recreate visual master';$('masterProgressText').textContent='Visual master saved in this tab';$('masterStatus').textContent='Visual master ready · '+formatTime(seconds);};
 $('makeMaster').disabled=true;$('makeMaster').textContent='Rendering…';$('masterStatus').textContent='Rendering silent visuals — keep this tab open';$('masterProgress').style.width='0%';
@@ -146,19 +146,21 @@ rendering=true;$('exportFinal').disabled=true;$('exportStatus').textContent='Pre
 const video=document.createElement('video');video.src=masterUrl;video.muted=true;video.playsInline=true;video.preload='auto';
 await new Promise((resolve,reject)=>{video.onloadedmetadata=resolve;video.onerror=reject});
 const canvas=document.createElement('canvas');canvas.width=1280;canvas.height=720;const ctx=canvas.getContext('2d');const videoStream=canvas.captureStream(24);
-let audioCtx=null,voiceGain=null,musicGain=null;
+let audioCtx=null,voiceGain=null,musicGain=null,voiceAudio=null,musicAudio=null;
 try{
 audioCtx=new (window.AudioContext||window.webkitAudioContext)();const dest=audioCtx.createMediaStreamDestination();
+if(voiceUrl){voiceAudio=new Audio(voiceUrl);voiceAudio.preload='auto'}
+if(musicUrl){musicAudio=new Audio(musicUrl);musicAudio.preload='auto';musicAudio.loop=true}
 if(voiceAudio){voiceGain=audioCtx.createGain();voiceGain.gain.value=voiceEnabled?1:0;const vs=audioCtx.createMediaElementSource(voiceAudio);vs.connect(voiceGain);voiceGain.connect(dest)}
-if(musicAudio){musicGain=audioCtx.createGain();musicGain.gain.value=musicEnabled?.22:0;const ms=audioCtx.createMediaElementSource(musicAudio);ms.connect(musicGain);musicGain.connect(dest)}
+if(musicAudio){musicGain=audioCtx.createGain();musicGain.gain.value=musicEnabled ? 0.22 : 0;const ms=audioCtx.createMediaElementSource(musicAudio);ms.connect(musicGain);musicGain.connect(dest)}
 videoStream.addTrack(dest.stream.getAudioTracks()[0]);
 }catch(err){console.warn('Audio mixing unavailable',err)}
 let rec;try{rec=new MediaRecorder(videoStream,{mimeType:MediaRecorder.isTypeSupported('video/webm;codecs=vp9')?'video/webm;codecs=vp9':'video/webm'})}catch(e){rendering=false;$('exportFinal').disabled=false;alert('WebM export is not supported in this browser.');return}
 const chunks=[];rec.ondataavailable=e=>{if(e.data.size)chunks.push(e.data)};
 rec.onstop=()=>{const blob=new Blob(chunks,{type:'video/webm'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=($('projectTitle').value.trim()||'sceneforge-film').replace(/[^\w-]+/g,'-')+'-final.webm';a.click();setTimeout(()=>URL.revokeObjectURL(url),60000);videoStream.getTracks().forEach(t=>t.stop());if(audioCtx)audioCtx.close();rendering=false;$('exportFinal').disabled=false;$('exportStatus').textContent='Export ready · '+(blob.size/1024/1024).toFixed(1)+' MB · WebM';};
 try{
-if(audioCtx)await audioCtx.resume();if(voiceAudio){voiceAudio.currentTime=0;voiceAudio.muted=!voiceEnabled; if(voiceEnabled)await voiceAudio.play().catch(()=>{})}
-if(musicAudio){musicAudio.currentTime=0;musicAudio.muted=!musicEnabled;musicAudio.loop=true;if(musicEnabled)await musicAudio.play().catch(()=>{})}
+if(audioCtx)await audioCtx.resume();if(voiceAudio){voiceAudio.currentTime=0; if(voiceEnabled)await voiceAudio.play().catch(()=>{})}
+if(musicAudio){musicAudio.currentTime=0;musicAudio.loop=true;if(musicEnabled)await musicAudio.play().catch(()=>{})}
 await video.play();
 }catch(e){console.warn(e)}
 rec.start(1000);const start=performance.now();const duration=video.duration||masterDuration;
