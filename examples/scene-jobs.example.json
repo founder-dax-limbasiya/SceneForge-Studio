@@ -1,0 +1,36 @@
+{
+  "schemaVersion": "sceneforge.scene-jobs.v1",
+  "project": {
+    "title": "Sample film",
+    "targetRuntimeSeconds": 600,
+    "plannedRuntimeSeconds": 10,
+    "sceneJobCount": 2,
+    "clipLengthSeconds": 5,
+    "aspectRatio": "16:9",
+    "requestedOutput": { "width": 832, "height": 480 }
+  },
+  "jobs": [
+    {
+      "jobId": "scene-0001",
+      "order": 1,
+      "status": "planned",
+      "prompt": "A lone traveller walking into a quiet station at dawn, cinematic wide angle",
+      "durationSeconds": 5,
+      "seed": 1729301,
+      "aspectRatio": "16:9",
+      "requestedOutput": { "width": 832, "height": 480 },
+      "referenceImage": null
+    },
+    {
+      "jobId": "scene-0002",
+      "order": 2,
+      "status": "planned",
+      "prompt": "Close shot of a train arriving through morning mist, realistic film lighting",
+      "durationSeconds": 5,
+      "seed": 1729302,
+      "aspectRatio": "16:9",
+      "requestedOutput": { "width": 832, "height": 480 },
+      "referenceImage": null
+    }
+  ]
+}
