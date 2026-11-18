@@ -33,3 +33,20 @@ This is a static site. Open `index.html` in a modern browser, or serve the folde
 5. **Assembly** — combine completed scene clips with voice, music, and subtitles after generation.
 
 A worker should only be marked available after it passes a real health check and reports its capabilities. Free GPU services have quotas and provider restrictions; there is no promise of unlimited or always-on free compute.
+
+
+## GPU scene-job handoff
+
+The Studio can export a SceneForge scene-job manifest. The standard-library submitter in tools/submit_scene_jobs.py converts each scene prompt into a separate ComfyUI-Distributed queue request. See docs/GPU_WORKERS.md for the worker setup, workflow requirements, queue command, retry behavior, and security warning.
+
+The queue bridge requires a reachable ComfyUI-Distributed master, worker IDs, and a ComfyUI API-format workflow with a load-balanced DistributedCollector. It does not provision a GPU or make an unauthenticated public ComfyUI endpoint safe.
+
+## Tests
+
+Run the Python submitter tests with:
+
+    python -m unittest discover -s tools -p "test_*.py" -v
+
+Check the browser JavaScript syntax with:
+
+    node tools/check_frontend.mjs
