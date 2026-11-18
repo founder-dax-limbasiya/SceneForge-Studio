@@ -23,6 +23,15 @@
 <div style="height:12px"></div><label class="field-label" for="script">Script · separate scenes with a blank line</label><textarea id="script" placeholder="The city wakes beneath a violet sunrise...&#10;&#10;A lone traveller steps onto the empty platform..."></textarea>
 <div class="row between" style="margin-top:10px"><span class="hint">Each paragraph becomes a scene. You can edit it below.</span><button class="btn primary" id="buildScenes">Build scenes ↗</button></div>
 <div id="sceneList" class="scene-list" style="margin-top:13px"></div>
+<div class="master-box" style="margin-top:14px">
+ <div class="card-title" style="margin-bottom:10px">GPU scene jobs</div>
+ <div class="row">
+  <div style="flex:1;min-width:120px"><label class="field-label" for="clipLength">Clip length</label><select id="clipLength"><option value="5" selected>5 seconds</option><option value="8">8 seconds</option><option value="10">10 seconds</option></select></div>
+  <div style="flex:1;min-width:120px"><label class="field-label" for="jobAspect">Aspect ratio</label><select id="jobAspect"><option value="16:9">Landscape · 16:9</option><option value="9:16">Portrait · 9:16</option><option value="1:1">Square · 1:1</option></select></div>
+ </div>
+ <div class="row between" style="margin-top:12px"><span class="progress-label" id="sceneJobEstimate">0 jobs · add scenes to plan GPU renders</span><button class="btn primary" id="downloadSceneJobs">Export scene jobs ↓</button></div>
+ <div class="hint">Exports prompts and scene settings only. It does not start GPU rendering or upload your media.</div>
+</div>
 </section>
 <section class="card"><div class="card-head"><div class="step"><div class="stepno">02</div><div><div class="card-title">Visual assets</div><div class="card-sub">Upload images to use as scene visuals. GPU video generation is a later worker integration.</div></div></div><span class="tag">Local files</span></div>
 <div class="upload-grid"><div class="upload"><div><strong>▧ Scene images</strong><br><small>JPG, PNG or WebP · up to 30 images</small></div><input id="images" class="file-input" type="file" accept="image/*" multiple></div><div class="upload"><div><strong>▣ Visual master</strong><br><small>Use a previously rendered visual-only video</small></div><input id="masterUpload" class="file-input" type="file" accept="video/*"></div></div>
@@ -48,7 +57,7 @@
 </main>
 <aside class="sidecol">
 <section class="card"><div class="card-head"><div><div class="card-title">Project overview</div><div class="card-sub">A quick look at your current cut.</div></div><span class="tag">Live</span></div>
-<div class="stat-grid"><div class="stat"><b id="statScenes">0</b><span>Scenes</span></div><div class="stat"><b id="statRuntime">10:00</b><span>Target runtime</span></div><div class="stat"><b id="statImages">0</b><span>Images</span></div><div class="stat"><b id="statTracks">0/3</b><span>Tracks loaded</span></div></div>
+<div class="stat-grid"><div class="stat"><b id="statScenes">0</b><span>Scenes</span></div><div class="stat"><b id="statRuntime">10:00</b><span>Target runtime</span></div><div class="stat"><b id="statImages">0</b><span>Images</span></div><div class="stat"><b id="statTracks">0/3</b><span>Tracks loaded</span></div><div class="stat"><b id="statCoverage">0:00</b><span>Planned clip time</span></div></div>
 </section>
 <section class="card"><div class="card-head"><div><div class="card-title">Track controls</div><div class="card-sub">Quick on/off switches</div></div></div>
 <div class="toggle-line"><span>Voiceover</span><button class="switch" id="voiceToggle2" role="switch" aria-checked="true" aria-label="Toggle voiceover"></button></div>
@@ -72,6 +81,9 @@ function formatTime(s){const m=Math.floor(s/60),sec=Math.floor(s%60);return m+':
 function updateStats(){
 $('sceneCountTag').textContent=scenes.length+' scenes';$('statScenes').textContent=scenes.length;$('statRuntime').textContent=formatTime(Number($('runtime').value)*60);$('statImages').textContent=images.length;
 $('statTracks').textContent=[voiceUrl,musicUrl,$('captionText').value.trim()].filter(Boolean).length+'/3';
+const clipSeconds=Number($('clipLength').value||5),plannedSeconds=scenes.length*clipSeconds,targetSeconds=Number($('runtime').value)*60;
+$('statCoverage').textContent=formatTime(plannedSeconds);
+$('sceneJobEstimate').textContent=scenes.length+' jobs × '+clipSeconds+'s = '+formatTime(plannedSeconds)+' planned · '+Math.max(0,Math.ceil(targetSeconds/clipSeconds)-scenes.length)+' more for target';
 $('captionName').textContent=$('captionText').value.trim()?$('captionText').value.split('\n').filter(x=>x.trim()).length+' caption lines · '+$('captionLanguage').value:'No subtitle lines added';
 }
 function sceneCard(scene,i){
@@ -102,6 +114,25 @@ function setSwitch(kind,value){if(kind==='voice')voiceEnabled=value;if(kind==='m
 [['voiceToggle','voice'],['voiceToggle2','voice'],['musicToggle','music'],['musicToggle2','music'],['captionToggle','caption'],['captionToggle2','caption']].forEach(([id,k])=>$(id).addEventListener('click',()=>setSwitch(k,!(k==='voice'?voiceEnabled:k==='music'?musicEnabled:captionsEnabled))));
 $('captionText').addEventListener('input',updateStats);$('captionLanguage').addEventListener('change',updateStats);
 $('runtime').addEventListener('change',()=>{$('runtimeLabel').textContent='Target: '+formatTime(Number($('runtime').value)*60);updateStats()});
+$('clipLength').addEventListener('change',updateStats);$('jobAspect').addEventListener('change',updateStats);
+function stableSeed(value){let h=2166136261;for(let i=0;i<value.length;i++){h^=value.charCodeAt(i);h=Math.imul(h,16777619)}return (h>>>0)%2147483647}
+$('downloadSceneJobs').addEventListener('click',()=>{
+ if(!scenes.length){alert('Build scenes first, then export the jobs.');return}
+ const clipSeconds=Number($('clipLength').value),targetSeconds=Number($('runtime').value)*60,aspect=$('jobAspect').value;
+ const output=aspect==='16:9'?{width:832,height:480}:aspect==='9:16'?{width:480,height:832}:{width:640,height:640};
+ const plannedSeconds=scenes.length*clipSeconds;
+ const manifest={
+  schemaVersion:'sceneforge.scene-jobs.v1',
+  createdAt:new Date().toISOString(),
+  project:{title:$('projectTitle').value.trim()||'Untitled film',targetRuntimeSeconds:targetSeconds,plannedRuntimeSeconds:plannedSeconds,sceneJobCount:scenes.length,clipLengthSeconds:clipSeconds,aspectRatio:aspect,requestedOutput:output},
+  engine:{name:'ComfyUI',distribution:'ComfyUI-Distributed',queueEndpoint:'POST /distributed/queue',workflowFormat:'ComfyUI API prompt JSON'},
+  requirements:['Use a ComfyUI API-format workflow, not the normal UI workflow export.','Include a DistributedCollector node with load_balance enabled for one-scene-per-available-worker scheduling.','Configure the same required model files and custom nodes on each worker.','The workflow controls the actual frame count, resolution and model duration; manifest output dimensions are requested targets only.'],
+  mediaNote:'Reference image names are recorded for handoff. Image bytes are not embedded in this manifest.',
+  jobs:scenes.map((scene,i)=>({jobId:'scene-'+String(i+1).padStart(4,'0'),order:i+1,status:'planned',prompt:scene.text,durationSeconds:clipSeconds,seed:stableSeed(($('projectTitle').value||'sceneforge')+'|'+(i+1)+'|'+scene.text),aspectRatio:aspect,requestedOutput:output,referenceImage:scene.imageFile?.name||null}))
+ };
+ const blob=new Blob([JSON.stringify(manifest,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');
+ a.href=url;a.download=($('projectTitle').value.trim()||'sceneforge-film').replace(/[^\w-]+/g,'-')+'-scene-jobs.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),30000);
+});
 $('masterUpload').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;loadMaster(f)});
 function loadMaster(blob){
 if(masterUrl)URL.revokeObjectURL(masterUrl);masterBlob=blob;masterUrl=URL.createObjectURL(blob);
