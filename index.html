@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#090b10"><meta name="description" content="SceneForge Studio — build scenes, shape the soundtrack, and export your film.">
+<title>SceneForge Studio</title>
+<style>
+:root{color-scheme:dark;--bg:#090b10;--panel:#11151e;--panel2:#151b26;--line:#252d3b;--muted:#8d98aa;--text:#f3f5fa;--accent:#9a86ff;--accent2:#64d7c4;--danger:#ff7f8f;--radius:18px;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 78% -15%,#29214e 0,transparent 38%),var(--bg);color:var(--text);min-height:100vh}button,input,textarea,select{font:inherit}button{cursor:pointer}.app{max-width:1440px;margin:auto;padding:22px 24px 40px}.topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:28px}.brand{display:flex;align-items:center;gap:12px;font-weight:750;letter-spacing:-.04em;font-size:19px}.brand-mark{width:36px;height:36px;border-radius:12px;display:grid;place-items:center;background:linear-gradient(135deg,#ad9aff,#6656ce);color:#100d21;font-weight:900;box-shadow:0 6px 30px #8870ff38}.top-actions{display:flex;align-items:center;gap:10px}.pill{border:1px solid var(--line);border-radius:999px;padding:8px 12px;color:var(--muted);font-size:12px;display:flex;align-items:center;gap:7px;background:#11151dbd}.dot{width:7px;height:7px;border-radius:50%;background:#e8b766;box-shadow:0 0 0 4px #e8b76618}.profile{width:34px;height:34px;border-radius:50%;background:#25213b;display:grid;place-items:center;color:#cfc5ff;font-size:12px;font-weight:700}
+.hero{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;margin-bottom:24px}.eyebrow{color:#b1a5ff;text-transform:uppercase;letter-spacing:.15em;font-size:10px;font-weight:800}.hero h1{font-size:clamp(26px,4vw,42px);letter-spacing:-.055em;line-height:1.05;margin:9px 0 8px}.hero p{color:var(--muted);margin:0;max-width:610px;line-height:1.6;font-size:14px}.hero-meta{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}.tag{padding:8px 11px;border:1px solid var(--line);background:#11151d;border-radius:10px;font-size:11px;color:#c4ccda}.layout{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:18px;align-items:start}.maincol,.sidecol{display:grid;gap:16px}.card{background:linear-gradient(155deg,#151a25ee,#10141c);border:1px solid var(--line);border-radius:var(--radius);padding:19px;box-shadow:0 12px 38px #00000017}.card-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:15px}.card-title{font-size:15px;font-weight:720;letter-spacing:-.02em}.card-sub{font-size:11px;color:var(--muted);margin-top:4px}.step{display:flex;gap:11px;align-items:flex-start}.stepno{width:28px;height:28px;flex:0 0 28px;border:1px solid #554a8a;background:#201b36;border-radius:9px;display:grid;place-items:center;color:#c5b9ff;font-size:12px;font-weight:800}.section-body{min-width:0;flex:1}.field-label{display:block;font-size:11px;color:#aab4c4;margin-bottom:7px}.text-input,textarea,select{width:100%;color:var(--text);background:#0c1017;border:1px solid #2a3342;border-radius:11px;padding:11px 12px;outline:none;font-size:13px}.text-input:focus,textarea:focus,select:focus{border-color:#8875ec;box-shadow:0 0 0 3px #8a79ec1b}textarea{resize:vertical;min-height:116px;line-height:1.6}.hint{font-size:11px;color:#7f8b9f;line-height:1.5;margin-top:7px}.btn{border:1px solid var(--line);background:#1a202c;color:#e7eaf1;padding:10px 14px;border-radius:11px;font-size:12px;font-weight:650;transition:.18s}.btn:hover{border-color:#7568bc;transform:translateY(-1px)}.btn.primary{border:0;background:linear-gradient(135deg,#a596ff,#7666e8);color:#110e20;box-shadow:0 7px 24px #8f7bff29}.btn.subtle{background:transparent}.btn.small{padding:7px 10px;font-size:11px}.btn:disabled{opacity:.45;cursor:not-allowed;transform:none}.row{display:flex;align-items:center;gap:9px;flex-wrap:wrap}.between{justify-content:space-between}.scene-list{display:grid;gap:9px}.scene{display:grid;grid-template-columns:75px minmax(0,1fr) auto;align-items:center;gap:12px;padding:10px;border:1px solid #252d3b;border-radius:13px;background:#0e121a}.thumb{height:53px;border-radius:9px;background:linear-gradient(140deg,#282344,#172b39);display:grid;place-items:center;color:#a89bff;font-size:11px;overflow:hidden}.thumb img{width:100%;height:100%;object-fit:cover}.scene-name{font-size:12px;font-weight:700}.scene-text{font-size:11px;color:#99a4b5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:4px}.scene-index{font-size:10px;color:#7f8b9f;margin-bottom:4px}.upload-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.upload{border:1px dashed #364054;background:#0d121a;border-radius:13px;padding:14px;min-height:100px;display:flex;flex-direction:column;justify-content:space-between;gap:10px}.upload strong{font-size:12px}.upload small{font-size:10px;color:var(--muted);line-height:1.4}.file-input{font-size:11px;color:#aab4c4;max-width:100%}.track{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px;border:1px solid #273040;border-radius:13px;background:#0e121a;margin-top:9px}.track-left{display:flex;align-items:center;gap:10px;min-width:0}.track-icon{width:34px;height:34px;border-radius:10px;background:#24203c;color:#b9acff;display:grid;place-items:center;font-size:15px}.track-name{font-size:12px;font-weight:700}.track-file{font-size:10px;color:#8995a8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:190px;margin-top:3px}.switch{width:42px;height:24px;background:#333c4c;border-radius:99px;padding:3px;border:0;flex:0 0 42px;transition:.2s}.switch:after{content:"";display:block;width:18px;height:18px;background:#dce1ec;border-radius:50%;transition:.2s}.switch[aria-checked=true]{background:#7668db}.switch[aria-checked=true]:after{transform:translateX(18px);background:white}.master-box{padding:15px;border:1px solid #3a345b;background:linear-gradient(135deg,#1c1930,#121722);border-radius:14px}.master-status{font-size:11px;color:#c2b9ff;display:flex;align-items:center;gap:7px}.master-status:before{content:"";width:7px;height:7px;background:#9885ff;border-radius:50%}.progress{height:6px;background:#2a3040;border-radius:8px;overflow:hidden;margin:13px 0 8px}.progress>i{display:block;height:100%;width:0;background:linear-gradient(90deg,#a99aff,#5cdbc5);transition:width .2s}.progress-label{font-size:10px;color:#929caf}.toggle-line{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid #242c39}.toggle-line:last-child{border:0}.toggle-line span{font-size:12px;color:#d9deea}.preview{background:#07090d;border:1px solid #2d3444;border-radius:14px;aspect-ratio:16/9;display:grid;place-items:center;overflow:hidden;position:relative}.preview canvas,.preview video{width:100%;height:100%;object-fit:contain}.preview-placeholder{text-align:center;color:#8792a5;font-size:11px;line-height:1.7;padding:20px}.preview-placeholder b{display:block;color:#e5e8ef;font-size:13px;margin-bottom:4px}.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:13px}.stat{padding:11px;background:#0d121a;border:1px solid #242c39;border-radius:11px}.stat b{display:block;font-size:17px;letter-spacing:-.03em}.stat span{font-size:10px;color:#8390a4}.notice{background:#171b27;border:1px solid #34304c;border-radius:12px;padding:12px;color:#b7bfd0;font-size:11px;line-height:1.55}.notice b{color:#d9d0ff}.small-muted{font-size:10px;color:#7f8b9e;line-height:1.5}.range{width:100%;accent-color:#9a86ff}.caption-actions{display:flex;align-items:center;gap:7px}.statusline{font-size:11px;color:#9ca8bb;min-height:17px;margin-top:9px}.footer{color:#667286;font-size:10px;text-align:center;padding:22px 0 0}.hidden{display:none!important}
+@media(max-width:920px){.layout{grid-template-columns:1fr}.sidecol{grid-template-columns:1fr 1fr}.sidecol .card:last-child{grid-column:1/-1}}
+@media(max-width:620px){.app{padding:15px 12px 28px}.topbar{margin-bottom:22px}.pill.gpu{display:none}.hero{display:block}.hero-meta{justify-content:flex-start;margin-top:15px}.layout{gap:12px}.card{padding:15px;border-radius:15px}.sidecol{grid-template-columns:1fr}.sidecol .card:last-child{grid-column:auto}.upload-grid{grid-template-columns:1fr}.scene{grid-template-columns:58px minmax(0,1fr) auto;gap:9px;padding:8px}.thumb{height:45px}.btn{padding:10px 12px}.hero p{font-size:13px}.top-actions{gap:6px}.brand{font-size:17px}}
+</style>
+</head>
+<body>
+<div class="app">
+<header class="topbar"><div class="brand"><div class="brand-mark">S</div>SceneForge <span style="font-weight:450;color:#8994a8">STUDIO</span></div><div class="top-actions"><div class="pill gpu"><i class="dot"></i> GPU workers not connected</div><div class="pill">Local-first workspace</div><div class="profile">SF</div></div></header>
+<section class="hero"><div><div class="eyebrow">Your creative command centre</div><h1>Make the story<br>feel like a film.</h1><p>Build your scenes, keep a clean visual master, then shape voice, music and subtitles independently — without rebuilding the visuals.</p></div><div class="hero-meta"><span class="tag">01 · Story</span><span class="tag">02 · Visual master</span><span class="tag">03 · Final cut</span></div></section>
+<div class="layout">
+<main class="maincol">
+<section class="card"><div class="card-head"><div class="step"><div class="stepno">01</div><div><div class="card-title">Story & scenes</div><div class="card-sub">Write your script, then turn its paragraphs into editable scenes.</div></div></div><span class="tag" id="sceneCountTag">0 scenes</span></div>
+<label class="field-label" for="projectTitle">Project title</label><input id="projectTitle" class="text-input" value="Untitled film" maxlength="80">
+<div style="height:12px"></div><label class="field-label" for="script">Script · separate scenes with a blank line</label><textarea id="script" placeholder="The city wakes beneath a violet sunrise...&#10;&#10;A lone traveller steps onto the empty platform..."></textarea>
+<div class="row between" style="margin-top:10px"><span class="hint">Each paragraph becomes a scene. You can edit it below.</span><button class="btn primary" id="buildScenes">Build scenes ↗</button></div>
+<div id="sceneList" class="scene-list" style="margin-top:13px"></div>
+</section>
+<section class="card"><div class="card-head"><div class="step"><div class="stepno">02</div><div><div class="card-title">Visual assets</div><div class="card-sub">Upload images to use as scene visuals. GPU video generation is a later worker integration.</div></div></div><span class="tag">Local files</span></div>
+<div class="upload-grid"><div class="upload"><div><strong>▧ Scene images</strong><br><small>JPG, PNG or WebP · up to 30 images</small></div><input id="images" class="file-input" type="file" accept="image/*" multiple></div><div class="upload"><div><strong>▣ Visual master</strong><br><small>Use a previously rendered visual-only video</small></div><input id="masterUpload" class="file-input" type="file" accept="video/*"></div></div>
+<div class="hint" id="imageStatus">Images stay in this browser session. Add images to give each scene its visual.</div>
+</section>
+<section class="card"><div class="card-head"><div class="step"><div class="stepno">03</div><div><div class="card-title">Visual master</div><div class="card-sub">Render the visuals without voice, music or subtitles.</div></div></div><span class="tag">Silent master</span></div>
+<div class="master-box"><div class="master-status" id="masterStatus">No visual master created yet</div><div class="progress"><i id="masterProgress"></i></div><div class="row between"><span class="progress-label" id="masterProgressText">Ready when your scenes are set</span><span class="progress-label" id="runtimeLabel">Target: 10:00</span></div></div>
+<div class="row between" style="margin-top:13px"><div class="row"><label class="field-label" for="runtime" style="margin:0">Target runtime</label><select id="runtime" style="width:auto;padding:8px 10px"><option value="1">1 min</option><option value="3">3 min</option><option value="5">5 min</option><option value="10" selected>10 min</option></select></div><button class="btn primary" id="makeMaster">Create visual master</button></div>
+<div class="hint">The browser records in real time. Keep this tab open and the screen awake. A 10-minute film takes at least 10 minutes to render; mobile browsers may run out of memory.</div>
+</section>
+<section class="card"><div class="card-head"><div class="step"><div class="stepno">04</div><div><div class="card-title">Post-production tracks</div><div class="card-sub">Switch each track independently. These changes never modify the visual master.</div></div></div><span class="tag">Non-destructive</span></div>
+<div class="track"><div class="track-left"><div class="track-icon">◖</div><div><div class="track-name">Voiceover</div><div class="track-file" id="voiceName">No voiceover added</div></div></div><button class="switch" id="voiceToggle" role="switch" aria-checked="true" aria-label="Toggle voiceover"></button></div>
+<div style="padding:10px 2px 2px"><input id="voiceFile" class="file-input" type="file" accept="audio/*"><div class="hint">Upload narration. Turning this off excludes it from the final export.</div></div>
+<div class="track"><div class="track-left"><div class="track-icon">♫</div><div><div class="track-name">Background music</div><div class="track-file" id="musicName">No music added</div></div></div><button class="switch" id="musicToggle" role="switch" aria-checked="true" aria-label="Toggle background music"></button></div>
+<div style="padding:10px 2px 2px"><input id="musicFile" class="file-input" type="file" accept="audio/*"><div class="hint">Upload or replace the music track. It loops to the visual master duration.</div></div>
+<div class="track"><div class="track-left"><div class="track-icon">CC</div><div><div class="track-name">Subtitles</div><div class="track-file" id="captionName">No subtitle lines added</div></div></div><button class="switch" id="captionToggle" role="switch" aria-checked="true" aria-label="Toggle subtitles"></button></div>
+<div style="padding:10px 2px 2px"><div class="row"><div style="flex:1;min-width:120px"><label class="field-label" for="captionLanguage">Subtitle language</label><select id="captionLanguage"><option>English</option><option>Hindi</option><option>Gujarati</option><option>Auto / mixed</option></select></div><div style="flex:2;min-width:160px"><label class="field-label" for="captionText">Caption lines · one line per scene</label></div></div><textarea id="captionText" rows="3" style="min-height:78px" placeholder="The city wakes beneath a violet sunrise...&#10;The traveller steps onto the platform..."></textarea><div class="hint">Lines are timed evenly across scenes in this starter version. Word-level speech sync is not connected yet.</div></div>
+</section>
+<section class="card"><div class="card-head"><div class="step"><div class="stepno">05</div><div><div class="card-title">Final cut & export</div><div class="card-sub">Apply selected tracks to your saved silent master.</div></div></div><span class="tag">WebM export</span></div>
+<div class="preview" id="preview"><div class="preview-placeholder"><b>Your film preview appears here</b>Create a visual master to preview and export your cut.</div></div>
+<div class="row between" style="margin-top:13px"><span class="small-muted">Visuals remain unchanged when tracks are toggled.</span><button class="btn primary" id="exportFinal" disabled>Apply tracks & export ↗</button></div><div class="statusline" id="exportStatus">Create a visual master to enable final export.</div>
+</section>
+</main>
+<aside class="sidecol">
+<section class="card"><div class="card-head"><div><div class="card-title">Project overview</div><div class="card-sub">A quick look at your current cut.</div></div><span class="tag">Live</span></div>
+<div class="stat-grid"><div class="stat"><b id="statScenes">0</b><span>Scenes</span></div><div class="stat"><b id="statRuntime">10:00</b><span>Target runtime</span></div><div class="stat"><b id="statImages">0</b><span>Images</span></div><div class="stat"><b id="statTracks">0/3</b><span>Tracks loaded</span></div></div>
+</section>
+<section class="card"><div class="card-head"><div><div class="card-title">Track controls</div><div class="card-sub">Quick on/off switches</div></div></div>
+<div class="toggle-line"><span>Voiceover</span><button class="switch" id="voiceToggle2" role="switch" aria-checked="true" aria-label="Toggle voiceover"></button></div>
+<div class="toggle-line"><span>Background music</span><button class="switch" id="musicToggle2" role="switch" aria-checked="true" aria-label="Toggle music"></button></div>
+<div class="toggle-line"><span>Subtitles</span><button class="switch" id="captionToggle2" role="switch" aria-checked="true" aria-label="Toggle subtitles"></button></div>
+</section>
+<section class="card"><div class="card-head"><div><div class="card-title">What works today</div><div class="card-sub">Honest status of this build</div></div></div>
+<div class="notice"><b>Ready:</b> script-to-scenes, image uploads, silent visual-master rendering, independent voice/music/subtitle switches and browser WebM export.</div>
+<div style="height:9px"></div><div class="notice"><b>Not connected yet:</b> text-to-video GPU workers, distributed scene queue, automatic voice generation and speech-to-text subtitle sync. The GPU badge will stay disconnected until a real worker is configured.</div>
+<div style="height:9px"></div><p class="small-muted">This is a browser-based starter studio, not yet a full AI film generator. Long renders depend on your phone/browser memory and may need desktop-class hardware.</p></section>
+</aside>
+</div><div class="footer">SCENEFORGE STUDIO · Your files stay in this browser session · Keep a backup of exported masters</div>
+</div>
+<script>
+(()=>{
+const $=id=>document.getElementById(id);
+let scenes=[],images=[],masterBlob=null,masterUrl=null,masterDuration=600,rendering=false;
+let voiceUrl=null,musicUrl=null,voiceAudio=null,musicAudio=null,voiceEnabled=true,musicEnabled=true,captionsEnabled=true;
+const toggle=(id,state)=>{const el=$(id);el.setAttribute('aria-checked',String(state));};
+function formatTime(s){const m=Math.floor(s/60),sec=Math.floor(s%60);return m+':'+String(sec).padStart(2,'0')}
+function updateStats(){
+$('sceneCountTag').textContent=scenes.length+' scenes';$('statScenes').textContent=scenes.length;$('statRuntime').textContent=formatTime(Number($('runtime').value)*60);$('statImages').textContent=images.length;
+$('statTracks').textContent=[voiceUrl,musicUrl,$('captionText').value.trim()].filter(Boolean).length+'/3';
+$('captionName').textContent=$('captionText').value.trim()?$('captionText').value.split('\n').filter(x=>x.trim()).length+' caption lines · '+$('captionLanguage').value:'No subtitle lines added';
+}
+function sceneCard(scene,i){
+const node=document.createElement('div');node.className='scene';
+const thumb=document.createElement('div');thumb.className='thumb';if(scene.image){const im=document.createElement('img');im.src=scene.image;thumb.append(im)}else thumb.textContent='SCENE '+String(i+1).padStart(2,'0');
+const copy=document.createElement('div');const idx=document.createElement('div');idx.className='scene-index';idx.textContent='SCENE '+String(i+1).padStart(2,'0');const inp=document.createElement('input');inp.className='text-input';inp.style.padding='8px 9px';inp.style.fontSize='11px';inp.value=scene.text;inp.setAttribute('aria-label','Scene description');inp.addEventListener('input',()=>{scenes[i].text=inp.value;});copy.append(idx,inp);
+const actions=document.createElement('button');actions.className='btn small';actions.textContent='Image';actions.title='Assign next uploaded image';actions.onclick=()=>{if(!images.length){$('images').click();return}const next=(i)%images.length;scene.image=images[next].url;scene.imageFile=images[next].file;renderScenes();};node.append(thumb,copy,actions);return node;
+}
+function renderScenes(){$('sceneList').replaceChildren(...scenes.map(sceneCard));updateStats()}
+$('buildScenes').onclick=()=>{
+const raw=$('script').value.trim();if(!raw){$('script').focus();return}
+let parts=raw.split(/\n\s*\n/).map(x=>x.trim()).filter(Boolean);if(parts.length===1&&parts[0].includes('\n'))parts=parts[0].split('\n').map(x=>x.trim()).filter(Boolean);
+scenes=parts.map((text,i)=>({text,image:images[i]?.url||null,imageFile:images[i]?.file||null}));renderScenes();$('captionText').value=scenes.map(s=>s.text).join('\n');updateStats();
+};
+$('images').addEventListener('change',e=>{
+const files=Array.from(e.target.files||[]).slice(0,30);images.forEach(x=>URL.revokeObjectURL(x.url));images=files.map(file=>({file,url:URL.createObjectURL(file)}));
+scenes.forEach((s,i)=>{if(images[i]){s.image=images[i].url;s.imageFile=images[i].file}});renderScenes();$('imageStatus').textContent=images.length+' image(s) ready in this session.';updateStats();
+});
+function setAudio(kind,file){
+if(!file)return;const url=URL.createObjectURL(file);
+if(kind==='voice'){if(voiceUrl)URL.revokeObjectURL(voiceUrl);voiceUrl=url;$('voiceName').textContent=file.name;voiceAudio=new Audio(url);voiceAudio.preload='auto';voiceAudio.loop=false}
+else{if(musicUrl)URL.revokeObjectURL(musicUrl);musicUrl=url;$('musicName').textContent=file.name;musicAudio=new Audio(url);musicAudio.preload='auto';musicAudio.loop=true}
+updateStats();
+}
+$('voiceFile').addEventListener('change',e=>setAudio('voice',e.target.files[0]));
+$('musicFile').addEventListener('change',e=>setAudio('music',e.target.files[0]));
+function setSwitch(kind,value){if(kind==='voice')voiceEnabled=value;if(kind==='music')musicEnabled=value;if(kind==='caption')captionsEnabled=value;const id=kind==='voice'?'voiceToggle':kind==='music'?'musicToggle':'captionToggle';const id2=id+'2';toggle(id,value);toggle(id2,value)}
+[['voiceToggle','voice'],['voiceToggle2','voice'],['musicToggle','music'],['musicToggle2','music'],['captionToggle','caption'],['captionToggle2','caption']].forEach(([id,k])=>$(id).addEventListener('click',()=>setSwitch(k,!(k==='voice'?voiceEnabled:k==='music'?musicEnabled:captionsEnabled))));
+$('captionText').addEventListener('input',updateStats);$('captionLanguage').addEventListener('change',updateStats);
+$('runtime').addEventListener('change',()=>{$('runtimeLabel').textContent='Target: '+formatTime(Number($('runtime').value)*60);updateStats()});
+$('masterUpload').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;loadMaster(f)});
+function loadMaster(blob){
+if(masterUrl)URL.revokeObjectURL(masterUrl);masterBlob=blob;masterUrl=URL.createObjectURL(blob);
+const vid=document.createElement('video');vid.src=masterUrl;vid.controls=true;vid.playsInline=true;vid.muted=true;vid.onloadedmetadata=()=>{masterDuration=vid.duration||600;$('preview').replaceChildren(vid);$('masterStatus').textContent='Visual master ready · '+formatTime(masterDuration);$('masterProgress').style.width='100%';$('masterProgressText').textContent='Master loaded';$('exportFinal').disabled=false;$('exportStatus').textContent='Visual master ready. Select tracks and export.';};
+}
+function drawFit(ctx,img,w,h){
+const iw=img.videoWidth||img.naturalWidth||w,ih=img.videoHeight||img.naturalHeight||h;if(!iw||!ih){ctx.fillStyle='#171929';ctx.fillRect(0,0,w,h);return}
+const scale=Math.max(w/iw,h/ih),dw=iw*scale,dh=ih*scale;ctx.drawImage(img,(w-dw)/2,(h-dh)/2,dw,dh);
+}
+function drawScene(ctx,scene,i,total,w,h){
+ctx.fillStyle='#111827';ctx.fillRect(0,0,w,h);
+if(scene.imageFile){const im=imageCache.get(scene.imageFile);if(im&&im.complete)drawFit(ctx,im,w,h);else{const g=ctx.createLinearGradient(0,0,w,h);g.addColorStop(0,'#31284f');g.addColorStop(1,'#112d3d');ctx.fillStyle=g;ctx.fillRect(0,0,w,h)}}
+else{const g=ctx.createLinearGradient(0,0,w,h);g.addColorStop(0,'#292143');g.addColorStop(1,'#153344');ctx.fillStyle=g;ctx.fillRect(0,0,w,h);ctx.fillStyle='#ffffff10';for(let n=0;n<14;n++){ctx.beginPath();ctx.arc((n*137+40)%w,(n*79+20)%h,25+(n%4)*17,0,Math.PI*2);ctx.fill()}}
+const grad=ctx.createLinearGradient(0,h*.28,0,h);grad.addColorStop(0,'#05070a00');grad.addColorStop(1,'#05070ae8');ctx.fillStyle=grad;ctx.fillRect(0,0,w,h);
+ctx.fillStyle='#c5b8ff';ctx.font='700 18px system-ui';ctx.fillText('SCENEFORGE  /  '+String(i+1).padStart(2,'0'),52,h-145);
+ctx.fillStyle='#fff';ctx.font='600 34px system-ui';const words=(scene.text||'').split(/\s+/);let lines=[],line='';for(const word of words){const t=line?line+' '+word:word;if(ctx.measureText(t).width>w-110&&line){lines.push(line);line=word}else line=t}if(line)lines.push(line);lines.slice(0,3).forEach((l,j)=>ctx.fillText(l,52,h-95+j*43));
+ctx.fillStyle='#ffffff90';ctx.font='13px system-ui';ctx.fillText(String(i+1)+' / '+total,w-90,43);
+}
+const imageCache=new Map();
+function cacheImages(){images.forEach(({file})=>{if(!imageCache.has(file)){const im=new Image();im.src=URL.createObjectURL(file);imageCache.set(file,im)}})}
+function wait(ms){return new Promise(r=>setTimeout(r,ms))}
+async function makeMaster(){
+if(rendering||!scenes.length){if(!scenes.length)alert('Build at least one scene first.');return}
+rendering=true;cacheImages();const seconds=Number($('runtime').value)*60;masterDuration=seconds;
+const canvas=document.createElement('canvas');canvas.width=1280;canvas.height=720;const ctx=canvas.getContext('2d');const stream=canvas.captureStream(24);
+let recorder;try{recorder=new MediaRecorder(stream,{mimeType:MediaRecorder.isTypeSupported('video/webm;codecs=vp9')?'video/webm;codecs=vp9':'video/webm'})}catch(e){rendering=false;alert('This browser does not support WebM recording. Try Chrome.');return}
+const chunks=[];recorder.ondataavailable=e=>{if(e.data.size)chunks.push(e.data)};
+recorder.onstop=()=>{const blob=new Blob(chunks,{type:'video/webm'});loadMaster(blob);rendering=false;$('makeMaster').disabled=false;$('makeMaster').textContent='Recreate visual master';$('masterProgressText').textContent='Visual master saved in this tab';$('masterStatus').textContent='Visual master ready · '+formatTime(seconds);};
+$('makeMaster').disabled=true;$('makeMaster').textContent='Rendering…';$('masterStatus').textContent='Rendering silent visuals — keep this tab open';$('masterProgress').style.width='0%';
+recorder.start(1000);const start=performance.now();let frame=0;
+const tick=()=>{const elapsed=(performance.now()-start)/1000;const pct=Math.min(100,elapsed/seconds*100);$('masterProgress').style.width=pct+'%';$('masterProgressText').textContent=formatTime(elapsed)+' / '+formatTime(seconds);const idx=Math.min(scenes.length-1,Math.floor(elapsed/seconds*scenes.length));drawScene(ctx,scenes[idx],idx,scenes.length,canvas.width,canvas.height);if(elapsed>=seconds){recorder.stop();stream.getTracks().forEach(t=>t.stop());return}frame=requestAnimationFrame(tick)};
+tick();
+}
+$('makeMaster').addEventListener('click',makeMaster);
+function captionAt(time,duration){
+const lines=$('captionText').value.split('\n').map(x=>x.trim()).filter(Boolean);if(!captionsEnabled||!lines.length)return '';
+const i=Math.min(lines.length-1,Math.floor(time/duration*lines.length));return lines[i]||'';
+}
+async function exportFinal(){
+if(!masterBlob||rendering)return;
+rendering=true;$('exportFinal').disabled=true;$('exportStatus').textContent='Preparing final cut…';
+const video=document.createElement('video');video.src=masterUrl;video.muted=true;video.playsInline=true;video.preload='auto';
+await new Promise((resolve,reject)=>{video.onloadedmetadata=resolve;video.onerror=reject});
+const canvas=document.createElement('canvas');canvas.width=1280;canvas.height=720;const ctx=canvas.getContext('2d');const videoStream=canvas.captureStream(24);
+let audioCtx=null,voiceGain=null,musicGain=null;
+try{
+audioCtx=new (window.AudioContext||window.webkitAudioContext)();const dest=audioCtx.createMediaStreamDestination();
+if(voiceAudio){voiceGain=audioCtx.createGain();voiceGain.gain.value=voiceEnabled?1:0;const vs=audioCtx.createMediaElementSource(voiceAudio);vs.connect(voiceGain);voiceGain.connect(dest)}
+if(musicAudio){musicGain=audioCtx.createGain();musicGain.gain.value=musicEnabled?.22:0;const ms=audioCtx.createMediaElementSource(musicAudio);ms.connect(musicGain);musicGain.connect(dest)}
+videoStream.addTrack(dest.stream.getAudioTracks()[0]);
+}catch(err){console.warn('Audio mixing unavailable',err)}
+let rec;try{rec=new MediaRecorder(videoStream,{mimeType:MediaRecorder.isTypeSupported('video/webm;codecs=vp9')?'video/webm;codecs=vp9':'video/webm'})}catch(e){rendering=false;$('exportFinal').disabled=false;alert('WebM export is not supported in this browser.');return}
+const chunks=[];rec.ondataavailable=e=>{if(e.data.size)chunks.push(e.data)};
+rec.onstop=()=>{const blob=new Blob(chunks,{type:'video/webm'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=($('projectTitle').value.trim()||'sceneforge-film').replace(/[^\w-]+/g,'-')+'-final.webm';a.click();setTimeout(()=>URL.revokeObjectURL(url),60000);videoStream.getTracks().forEach(t=>t.stop());if(audioCtx)audioCtx.close();rendering=false;$('exportFinal').disabled=false;$('exportStatus').textContent='Export ready · '+(blob.size/1024/1024).toFixed(1)+' MB · WebM';};
+try{
+if(audioCtx)await audioCtx.resume();if(voiceAudio){voiceAudio.currentTime=0;voiceAudio.muted=!voiceEnabled; if(voiceEnabled)await voiceAudio.play().catch(()=>{})}
+if(musicAudio){musicAudio.currentTime=0;musicAudio.muted=!musicEnabled;musicAudio.loop=true;if(musicEnabled)await musicAudio.play().catch(()=>{})}
+await video.play();
+}catch(e){console.warn(e)}
+rec.start(1000);const start=performance.now();const duration=video.duration||masterDuration;
+const draw=()=>{const t=video.currentTime||0;try{drawFit(ctx,video,canvas.width,canvas.height)}catch(e){ctx.fillStyle='#111';ctx.fillRect(0,0,canvas.width,canvas.height)}
+const cap=captionAt(t,duration);if(cap){ctx.font='600 28px system-ui';const max=canvas.width-140;let words=cap.split(/\s+/),lines=[],line='';for(const word of words){const next=line?line+' '+word:word;if(ctx.measureText(next).width>max&&line){lines.push(line);line=word}else line=next}if(line)lines.push(line);const shown=lines.slice(0,2);const height=shown.length*38+24;ctx.fillStyle='#000000a8';ctx.fillRect(45,canvas.height-height-38,canvas.width-90,height);ctx.fillStyle='#fff';shown.forEach((l,i)=>ctx.fillText(l,70,canvas.height-55-(shown.length-1-i)*38))}
+if(video.ended||video.currentTime>=duration-.08){rec.stop();video.pause();if(voiceAudio)voiceAudio.pause();if(musicAudio)musicAudio.pause();return}
+$('exportStatus').textContent='Applying tracks · '+formatTime(t)+' / '+formatTime(duration);requestAnimationFrame(draw)};
+requestAnimationFrame(draw);
+}
+$('exportFinal').addEventListener('click',exportFinal);
+$('projectTitle').addEventListener('input',()=>{document.title=($('projectTitle').value||'SceneForge Studio')+' · SceneForge'});
+$('statRuntime').textContent='10:00';updateStats();
+})();
+</script>
+</body></html>
