@@ -1,1 +1,35 @@
-# SceneForge-Studio
+# SceneForge Studio
+
+A mobile-friendly, browser-based film assembly studio. This starter focuses on scene planning, a silent visual master, and a separate non-destructive post-production pass.
+
+## Current functionality
+
+- Turn script paragraphs into editable scenes.
+- Add local image assets to scenes.
+- Render a silent visual master in the browser.
+- Upload voiceover and background music independently.
+- Toggle voiceover, music, and subtitles independently for the final pass.
+- Burn simple scene-timed captions into the final video.
+- Export a WebM file from the browser.
+
+## Important limitations
+
+This repository does **not** yet include text-to-video inference, GPU worker pooling, automatic voice generation, Whisper speech recognition, or word-level subtitle alignment. The UI reports GPU workers as disconnected until a real worker service is integrated.
+
+The visual master renderer uses browser Canvas + MediaRecorder and records in real time. Keep the tab open and the device awake. Long renders may fail on mobile devices due to browser memory, battery, thermal, or background-tab limitations. WebM is the supported export format in this starter.
+
+Files are processed locally in the active browser session. The app does not upload user media to a server. Keep copies of important source files and exported masters.
+
+## Run and deploy
+
+This is a static site. Open `index.html` in a modern browser, or serve the folder with any static web server. Connect this Git repository to Vercel with the project root set to the repository root.
+
+## Planned architecture
+
+1. **Studio frontend** — project/script/scene editor and local preview.
+2. **Control plane** — durable projects, scene jobs, worker heartbeats, leases, and retry state.
+3. **GPU workers** — authorized workers that advertise supported model, VRAM, resolution, and current capacity.
+4. **Scene scheduler** — dispatch independent scene jobs to compatible workers; unrelated internet GPUs do not share one VRAM pool.
+5. **Assembly** — combine completed scene clips with voice, music, and subtitles after generation.
+
+A worker should only be marked available after it passes a real health check and reports its capabilities. Free GPU services have quotas and provider restrictions; there is no promise of unlimited or always-on free compute.
