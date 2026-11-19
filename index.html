@@ -24,6 +24,7 @@
 <div style="height:12px"></div><label class="field-label" for="visualStyle">Global visual style · applied to every GPU scene</label><input id="visualStyle" class="text-input" value="cinematic film still, natural detailed lighting, coherent color grading, smooth realistic motion" maxlength="500">
 <div style="height:10px"></div><label class="field-label" for="continuityNotes">Character & continuity notes · keep subjects consistent across scenes</label><textarea id="continuityNotes" rows="2" style="min-height:72px" placeholder="Main character: same young traveller, charcoal coat, small brown backpack. Keep face, costume and locations consistent."></textarea>
 <div style="height:10px"></div><label class="field-label" for="negativePrompt">Negative prompt · shared across all scenes</label><textarea id="negativePrompt" rows="2" style="min-height:65px" placeholder="blurry, flicker, distorted anatomy, extra limbs, text, watermark"></textarea>
+<div class="hint">Text and render settings auto-save on this device. Uploaded images, music, voiceover and video files must be added again after a page refresh.</div>
 <div class="row between" style="margin-top:10px"><span class="hint">Each paragraph becomes a shot. Visual style and continuity notes are added to every GPU prompt.</span><button class="btn primary" id="buildScenes">Build scenes ↗</button></div>
 <div id="sceneList" class="scene-list" style="margin-top:13px"></div>
 <div class="master-box" style="margin-top:14px">
@@ -92,7 +93,7 @@ $('captionName').textContent=$('captionText').value.trim()?$('captionText').valu
 function sceneCard(scene,i){
 const node=document.createElement('div');node.className='scene';
 const thumb=document.createElement('div');thumb.className='thumb';if(scene.image){const im=document.createElement('img');im.src=scene.image;thumb.append(im)}else thumb.textContent='SCENE '+String(i+1).padStart(2,'0');
-const copy=document.createElement('div');const idx=document.createElement('div');idx.className='scene-index';idx.textContent='SCENE '+String(i+1).padStart(2,'0');const inp=document.createElement('input');inp.className='text-input';inp.style.padding='8px 9px';inp.style.fontSize='11px';inp.value=scene.text;inp.setAttribute('aria-label','Scene description');inp.addEventListener('input',()=>{scenes[i].text=inp.value;saveDraft();});copy.append(idx,inp);
+const copy=document.createElement('div');const idx=document.createElement('div');idx.className='scene-index';idx.textContent='SCENE '+String(i+1).padStart(2,'0');const inp=document.createElement('input');inp.className='text-input';inp.style.padding='8px 9px';inp.style.fontSize='11px';inp.value=scene.text;inp.setAttribute('aria-label','Scene description');inp.addEventListener('input',()=>{scenes[i].text=inp.value;$('script').value=scenes.map(item=>item.text).join('\n\n');saveDraft();});copy.append(idx,inp);
 const actions=document.createElement('button');actions.className='btn small';actions.textContent='Image';actions.title='Assign next uploaded image';actions.onclick=()=>{if(!images.length){$('images').click();return}const next=(i)%images.length;scene.image=images[next].url;scene.imageFile=images[next].file;renderScenes();};node.append(thumb,copy,actions);return node;
 }
 function renderScenes(){$('sceneList').replaceChildren(...scenes.map(sceneCard));updateStats()}
@@ -106,8 +107,7 @@ function saveDraft(){
     title:$('projectTitle').value,script:$('script').value,
     visualStyle:$('visualStyle').value,continuityNotes:$('continuityNotes').value,
     negativePrompt:$('negativePrompt').value,runtime:$('runtime').value,
-    clipLength:$('clipLength').value,aspect:$('jobAspect').value,
-    sceneTexts:scenes.map(scene=>scene.text)
+    clipLength:$('clipLength').value,aspect:$('jobAspect').value
    };
    localStorage.setItem(DRAFT_KEY,JSON.stringify(draft));
    $('draftStatus').textContent='Draft saved on device';
@@ -127,10 +127,6 @@ function restoreDraft(){
   if(['5','8','10'].includes(String(draft.clipLength)))$('clipLength').value=String(draft.clipLength);
   if(['16:9','9:16','1:1'].includes(String(draft.aspect)))$('jobAspect').value=String(draft.aspect);
   if($('script').value.trim())$('buildScenes').click();
-  if(Array.isArray(draft.sceneTexts)&&draft.sceneTexts.length===scenes.length){
-   scenes.forEach((scene,index)=>{if(typeof draft.sceneTexts[index]==='string')scene.text=draft.sceneTexts[index]});
-   renderScenes();
-  }
   $('draftStatus').textContent='Draft restored from this device';
  }catch(error){$('draftStatus').textContent='Could not restore draft'}
 }
