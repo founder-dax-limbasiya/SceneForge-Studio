@@ -6,7 +6,7 @@ A mobile-friendly, browser-based film assembly studio. This starter focuses on s
 
 - Turn script paragraphs into editable scenes.
 - Apply shared visual style, character-continuity notes, and a negative prompt to every shot.
-- Auto-save the text draft and render settings locally in the browser; imported media files are session-only.
+- Auto-save the text draft and render settings locally in the browser; export/import a portable JSON draft to move it between devices. Imported media files are not included.
 - Add local image assets to scenes.
 - Render a silent visual master in the browser.
 - Upload voiceover and background music independently.
