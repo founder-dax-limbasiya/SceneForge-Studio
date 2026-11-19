@@ -329,18 +329,16 @@ $('gpuQueueBtn').addEventListener('click',async()=>{
  const promptNode=$('gpuPromptNode').value.trim();
  if(!promptNode){$('gpuQueueState').textContent='Enter the positive prompt node ID from your API workflow.';return}
  try{scenes.forEach((scene,i)=>makeGpuJobPrompt(scene,i))}catch(error){$('gpuQueueState').textContent='Workflow mapping error: '+error.message;return}
- if(!confirm('Queue '+scenes.length+' scene job(s) on '+gpuWorkers.length+' enabled GPU worker(s)? The master may also participate if configured.'))return;
+ if(!confirm('Queue '+scenes.length+' new scene job(s) on '+gpuWorkers.length+' enabled GPU worker(s)? The master may also participate if configured.'))return;
  $('gpuQueueBtn').disabled=true;$('gpuQueueState').textContent='Preparing scene submissions…';
- let accepted=0;
+ let accepted=0;const runId='run-'+Date.now();
  for(let i=0;i<scenes.length;i++){
   const jobId='scene-'+String(i+1).padStart(4,'0');
-  const already=gpuJobs.find(j=>j.job_id===jobId&&j.project_title===($('projectTitle').value.trim()||'Untitled film')&&j.status!=='error');
-  if(already){accepted++;continue}
   let prompt;
   try{prompt=makeGpuJobPrompt(scenes[i],i)}catch(error){$('gpuQueueState').textContent='Stopped before '+jobId+': '+error.message;break}
   const trace='sceneforge-'+Date.now()+'-'+(i+1);
   const payload={prompt,client_id:'sceneforge-studio',delegate_master:false,enabled_worker_ids:gpuWorkers.map(w=>w.id),auto_prepare:true,trace_execution_id:trace};
-  const record={job_id:jobId,order:i+1,project_title:$('projectTitle').value.trim()||'Untitled film',status:'submitting',prompt_id:null,created_at:new Date().toISOString()};
+  const record={job_id:jobId,run_id:runId,order:i+1,project_title:$('projectTitle').value.trim()||'Untitled film',status:'submitting',prompt_id:null,created_at:new Date().toISOString()};
   gpuJobs.push(record);saveGpuJobs();drawGpuJobs();
   try{
    const result=await gpuRequest('/distributed/queue',{method:'POST',body:JSON.stringify(payload)});
