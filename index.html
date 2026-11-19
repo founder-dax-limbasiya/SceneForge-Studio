@@ -14,7 +14,7 @@
 </head>
 <body>
 <div class="app">
-<header class="topbar"><div class="brand"><div class="brand-mark">S</div>SceneForge <span style="font-weight:450;color:#8994a8">STUDIO</span></div><div class="top-actions"><div class="pill gpu"><i class="dot"></i> GPU workers not connected</div><div class="pill">Local-first workspace</div><div class="profile">SF</div></div></header>
+<header class="topbar"><div class="brand"><div class="brand-mark">S</div>SceneForge <span style="font-weight:450;color:#8994a8">STUDIO</span></div><div class="top-actions"><div class="pill gpu" id="gpuTopStatus"><i class="dot"></i><span id="gpuTopLabel">GPU workers not connected</span></div><div class="pill">Local-first workspace</div><div class="profile">SF</div></div></header>
 <section class="hero"><div><div class="eyebrow">Your creative command centre</div><h1>Make the story<br>feel like a film.</h1><p>Build your scenes, keep a clean visual master, then shape voice, music and subtitles independently — without rebuilding the visuals.</p></div><div class="hero-meta"><span class="tag">01 · Story</span><span class="tag">02 · Visual master</span><span class="tag">03 · Final cut</span></div></section>
 <div class="layout">
 <main class="maincol">
@@ -220,7 +220,11 @@ const readGpuJobs=()=>{try{const v=JSON.parse(localStorage.getItem(GPU_JOBS_KEY)
 const saveGpuJobs=()=>{try{localStorage.setItem(GPU_JOBS_KEY,JSON.stringify(gpuJobs.slice(-250)))}catch{}};
 function setGpuStatus(message,state='info'){
  $('gpuConnectionState').textContent=message;
- $('gpuConnectionBadge').textContent=state==='ok'?'Connected':state==='error'?'Connection error':'Not connected';
+ $('gpuConnectionBadge').textContent=state==='ok'?'Master connected':state==='empty'?'No workers':state==='error'?'Connection error':'Not connected';
+ $('gpuTopLabel').textContent=state==='ok'?'GPU master connected':state==='empty'?'Master connected · no workers':'GPU workers not connected';
+ $('gpuTopStatus').style.borderColor=state==='ok'?'#326b60':state==='error'?'#74414a':'';
+ const dot=$('gpuTopStatus').querySelector('.dot');
+ dot.style.background=state==='ok'?'#64d7c4':state==='empty'?'#e8b766':state==='error'?'#ff7f8f':'';
 }
 function gpuMasterBase(){
  const raw=$('gpuMasterUrl').value.trim();
@@ -267,7 +271,7 @@ $('gpuConnectBtn').addEventListener('click',async()=>{
   const config=await gpuRequest('/distributed/config');
   if(!Array.isArray(config.workers))throw new Error('This endpoint did not return a ComfyUI-Distributed workers list.');
   gpuWorkers=config.workers.filter(w=>w&&w.enabled===true&&w.id!==undefined).map(w=>({id:String(w.id),name:String(w.name||'Worker'),type:String(w.type||'worker')}));
-  renderGpuWorkers();setGpuStatus('Master connected. '+gpuWorkers.length+' worker(s) enabled in its config. Live dispatch is checked when queuing.','ok');
+  renderGpuWorkers();setGpuStatus('Master connected. '+gpuWorkers.length+' worker(s) enabled in its config. Live dispatch is checked when queuing.',gpuWorkers.length?'ok':'empty');
  }catch(error){gpuWorkers=[];renderGpuWorkers();setGpuStatus(error.message,'error')}
  finally{$('gpuConnectBtn').disabled=false}
 });
