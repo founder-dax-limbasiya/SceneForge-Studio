@@ -17,7 +17,7 @@ This is job-level distribution. It does **not** merge worker VRAM or make one in
 2. At least one reachable ComfyUI worker with the same required workflow nodes and model files.
 3. A valid **ComfyUI API-format prompt JSON** exported from your configured workflow. The normal visual workflow JSON is not the same format.
 4. The API-format graph must contain a DistributedCollector whose inputs.load_balance is true.
-5. Note the worker IDs from GET /distributed/config.
+5. Note the worker IDs from GET /distributed/config, or let SceneForge's submitter discover enabled IDs with --workers auto.
 
 The upstream project provides a [WAN 2.2 14B T2V distributed workflow](https://github.com/robertvoy/ComfyUI-Distributed/blob/main/workflows/distributed-wan-2.2_14b_t2v.json). It is a reference starting point, not proof that every worker can load the model. Models and custom nodes must match across participating workers.
 
@@ -29,9 +29,9 @@ The upstream project provides a [WAN 2.2 14B T2V distributed workflow](https://g
 4. Identify the node ID and input name for the positive text prompt. Use the exact field name from your API workflow.
 5. Run the standard-library submitter:
 
-    python tools/submit_scene_jobs.py --manifest scene-jobs.json --workflow workflow-api.json --master-url https://YOUR-PRIVATE-COMFYUI-MASTER --workers 1,2 --prompt-node 6 --prompt-input text --checkpoint sceneforge-queue-checkpoint.json
+    python tools/submit_scene_jobs.py --manifest scene-jobs.json --workflow workflow-api.json --master-url https://YOUR-PRIVATE-COMFYUI-MASTER --workers auto --prompt-node 6 --prompt-input text --checkpoint sceneforge-queue-checkpoint.json
 
-Replace example worker IDs and prompt node ID with the values from your actual ComfyUI configuration.
+Replace the prompt node ID with the value from your actual ComfyUI workflow. Use --workers auto to take enabled IDs from the master's config, or pass a comma-separated list. To list IDs and names first, run: python tools/submit_scene_jobs.py --master-url https://YOUR-PRIVATE-COMFYUI-MASTER --list-workers.
 
 ### Map model settings
 
