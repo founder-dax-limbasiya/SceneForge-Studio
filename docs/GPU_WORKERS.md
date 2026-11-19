@@ -1,74 +1,55 @@
 # GPU Scene Workers
 
-## Integration choice
+## Browser-based connection (recommended for SceneForge Studio)
 
-SceneForge exports one prompt per planned shot. The reference integration is **ComfyUI + ComfyUI-Distributed**:
+The Studio now has a **Connect your GPU render engine** panel directly below the scene-job planner. The browser can connect to a ComfyUI-Distributed master without running the Python submitter.
 
-- The ComfyUI master owns the workflow and queue.
-- Remote ComfyUI instances provide GPU execution.
-- A DistributedCollector with load_balance enabled lets each submitted scene job go to an available participant.
-- The SceneForge submitter posts each shot to POST /distributed/queue.
+1. Start a ComfyUI master with ComfyUI-Distributed installed.
+2. Configure at least one reachable worker. All participating workers need the same workflow custom nodes and model files.
+3. Put the master behind a private network/VPN or an authenticated HTTPS reverse proxy. The upstream distributed queue API does not add authentication itself.
+4. Enable browser CORS on the master/proxy. The ComfyUI-Distributed docs call out `--enable-cors-header` for browser/remote workflows.
+5. In SceneForge, enter the secure master URL and (only if your proxy requires it) its bearer token. Press **Test connection & find workers**. The token is held in this page's memory only; it is not written to local storage.
+6. Upload the **ComfyUI API-format JSON** workflow. This is not the normal workflow canvas JSON.
+7. Set the positive prompt node ID and input name. Open Advanced workflow mapping to optionally map negative prompt, seed, frame count, width, and height node inputs.
+8. Press **Queue GPU scenes**. SceneForge sends each shot as a separate POST to `/distributed/queue`, using enabled worker IDs from the master config. Confirm the queue action before submission.
+9. Use **Check render status** to read the accepted prompt IDs from ComfyUI's normal `/history/{prompt_id}` endpoint.
 
-This is job-level distribution. It does **not** merge worker VRAM or make one individual scene render faster. Its benefit is that several independent shots can render on different GPUs.
+The browser panel uses the ComfyUI API directly. The master URL and bearer token are not sent to Vercel. The optional bearer token is for an authenticated reverse proxy, not native ComfyUI authentication. The browser sends requests cross-origin, so a correct CORS policy is required. If connection fails, check the master URL, HTTPS certificate, proxy access rules, OPTIONS preflight, and CORS headers.
 
-## What you need on the compute side
+### API workflow requirements
 
-1. A ComfyUI master with the ComfyUI-Distributed custom node installed.
-2. At least one reachable ComfyUI worker with the same required workflow nodes and model files.
-3. A valid **ComfyUI API-format prompt JSON** exported from your configured workflow. The normal visual workflow JSON is not the same format.
-4. The API-format graph must contain a DistributedCollector whose inputs.load_balance is true.
-5. Note the worker IDs from GET /distributed/config, or let SceneForge's submitter discover enabled IDs with --workers auto.
+- Export a ComfyUI **API-format** prompt graph. The file must be a JSON object of nodes with `class_type` and `inputs` (or an object with that graph under `prompt`).
+- Include a `DistributedCollector` node with `inputs.load_balance=true`.
+- The positive prompt node and input must match the graph exactly (for example, node `6`, input `text`; these IDs are not universal).
+- Optional mapping fields are only changed when a node ID is supplied. A wrong node ID/input stops the run before any request is sent.
+- Shot frame count is initially requested as `seconds × 16 + 1`. Each model workflow has its own valid frame and resolution constraints; check the loaded model workflow before running.
 
-The upstream project provides a [WAN 2.2 14B T2V distributed workflow](https://github.com/robertvoy/ComfyUI-Distributed/blob/main/workflows/distributed-wan-2.2_14b_t2v.json). It is a reference starting point, not proof that every worker can load the model. Models and custom nodes must match across participating workers.
+The master config's enabled workers are **configured/enabled**, not guaranteed online. The master performs the actual reachability/dispatch checks when each scene is queued. A queue acknowledgement with `prompt_id` only means ComfyUI accepted the prompt; a `worker_count` of zero does not prove a remote worker rendered the scene. Check history and the worker logs for actual results.
 
-## Submit a manifest
+### Ambiguous submission and duplicate prevention
 
-1. In SceneForge, create the story scenes and press **Export scene jobs**.
-2. On a machine/session that can reach your ComfyUI master, save the exported file as scene-jobs.json.
-3. Export your configured ComfyUI workflow in **API format** as workflow-api.json.
-4. Identify the node ID and input name for the positive text prompt. Use the exact field name from your API workflow.
-5. Run the standard-library submitter:
+SceneForge saves accepted ComfyUI prompt IDs in this browser's local storage. A network failure may happen after the master accepted a job but before the browser received its response. Such a shot is marked **unknown**, not automatically retried. Inspect the master's queue/history before pressing Queue again; a second run is intentionally treated as a new generation run and can create duplicate compute.
 
-    python tools/submit_scene_jobs.py --manifest scene-jobs.json --workflow workflow-api.json --master-url https://YOUR-PRIVATE-COMFYUI-MASTER --workers auto --prompt-node 6 --prompt-input text --checkpoint sceneforge-queue-checkpoint.json
+## Python submitter (optional)
 
-Replace the prompt node ID with the value from your actual ComfyUI workflow. Use --workers auto to take enabled IDs from the master's config, or pass a comma-separated list. To list IDs and names first, run: python tools/submit_scene_jobs.py --master-url https://YOUR-PRIVATE-COMFYUI-MASTER --list-workers.
+For a headless render machine, the repo also includes a standard-library script:
 
-### Map model settings
+    python tools/submit_scene_jobs.py --manifest scene-jobs.json --workflow workflow-api.json --master-url https://YOUR-PRIVATE-COMFYUI-MASTER --workers auto --prompt-node 6 --prompt-input text
 
-The manifest includes requestedOutput width/height, frameRate, and frameCount. The submitter can write them into chosen workflow nodes. Example:
+The helper supports optional negative prompt, seed, frames, width, and height node mapping. Use `--list-workers`, `--dry-run`, and `--status` as described in the command help.
 
-    python tools/submit_scene_jobs.py --manifest scene-jobs.json --workflow workflow-api.json --master-url https://YOUR-PRIVATE-COMFYUI-MASTER --workers 1,2 --prompt-node 6 --prompt-input text --negative-node 7 --negative-input text --seed-node 57 --seed-input seed --frames-node 41 --frames-input length --width-node 41 --width-input width --height-node 41 --height-input height
+## Integration architecture and limitations
 
-Node IDs and input names above are examples only. Look them up in your own API-format workflow. The UI's global visual style and continuity notes are prepended to each shot prompt; the shared negative prompt is passed to the optional negative-prompt node. Not every model workflow uses the same frame, width, and height controls. If you omit the optional mapping flags, the workflow keeps its own defaults. A frame count of duration × 16 + 1 is requested for these starter jobs; the actual model workflow remains responsible for its valid frame constraints.
-
-### Dry run and status
-
-Validate the local manifest and API workflow without sending jobs:
-
-    python tools/submit_scene_jobs.py --manifest scene-jobs.json --workflow workflow-api.json --prompt-node 6 --dry-run
-
-Inspect acknowledged jobs using ComfyUI history:
-
-    python tools/submit_scene_jobs.py --master-url https://YOUR-PRIVATE-COMFYUI-MASTER --checkpoint sceneforge-queue-checkpoint.json --status
-
-A successful queue acknowledgement only means the master accepted a prompt ID. It does not prove a video was rendered or saved. The status command reads normal ComfyUI history; a job not shown there may still be queued or may have aged out of history.
-
-The checkpoint stores each SceneForge job ID, ComfyUI prompt ID, worker count, and submission time. It skips jobs already acknowledged. The ComfyUI API does not promise end-to-end idempotency: after a network failure between server acceptance and client acknowledgement, inspect the queue/history before retrying to avoid duplicate generation.
-
-For an authenticated reverse proxy, set SCENEFORGE_PROXY_TOKEN in the submitter environment. This header is for the proxy only; it is **not** native ComfyUI authentication.
-
-## Critical security warning
-
-The upstream /distributed/queue API is experimental and does not add authentication or authorization. Never expose a raw ComfyUI master port to the public internet. Use a private network/VPN or an HTTPS reverse proxy with strong authentication and access restrictions. Do not put tokens in the browser app, Git repository, scene manifest, or shared workflow file.
+- The ComfyUI master owns the workflow and queue; remote ComfyUI instances supply GPU execution.
+- SceneForge submits one independent prompt per shot. A load-balanced DistributedCollector allows the master to dispatch each workflow to an available participant.
+- This is job-level distribution. It does **not** merge VRAM or make one individual scene render faster. It allows several independent shots to be rendered across multiple GPUs.
+- The upstream queue API is experimental, has no built-in authentication/authorization, and has no separate durable SceneForge job-status API. SceneForge polls normal ComfyUI history.
+- No worker is considered live until the master can reach it. The app never infers live GPU status merely from a worker being enabled in config.
 
 ## Model and hardware guidance
 
 - Start with short test shots and low resolution before planning a long film.
-- A 10-minute film made from 5-second shots needs about 120 completed shots; 8-second shots need about 75; 10-second shots need about 60. The manifest shows planned duration so a short script does not silently pretend to cover ten minutes.
+- A 10-minute film made from 5-second shots needs about 120 completed shots; 8-second shots need about 75; 10-second shots need about 60.
 - WanGP advertises selected configurations using as little as 6 GB VRAM. This is model/profile-specific and is not a guarantee for Wan 2.2 14B, 720p, or every video model. WanGP is a separate runtime, not automatically a ComfyUI-Distributed worker.
-- Use each worker's tested model, VRAM, RAM, resolution, and frame-count limits to choose a compatible workflow. A lower-VRAM worker may need a different model or quantized workflow.
-- Free GPU availability is not a production SLA. Kaggle documents weekly GPU quotas and session limits; Colab says its free resources, GPU availability, and usage limits vary. Respect the provider's policies and stop when a session ends; do not build persistent tunnels to evade limits.
-
-## Current boundary
-
-The SceneForge web app exports a job manifest. The CLI bridge can submit it to a reachable ComfyUI-Distributed master when a valid API workflow and worker IDs are supplied. The repository does not provision GPU machines, download multi-gigabyte model weights, or keep a free GPU runtime alive. No worker is considered online until the ComfyUI master reports it reachable.
+- Use each worker's tested model, VRAM, RAM, resolution, and frame-count limits to choose a compatible workflow.
+- Free GPU availability is not a production SLA. Respect provider session and usage limits. Do not use persistent tunnels to evade provider restrictions.
