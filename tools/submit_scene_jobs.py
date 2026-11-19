@@ -123,6 +123,36 @@ def apply_job(
     return prompt
 
 
+def enabled_worker_ids(config: dict[str, Any]) -> list[str]:
+    workers = config.get("workers", [])
+    if not isinstance(workers, list):
+        raise ValueError("ComfyUI /distributed/config did not return a workers array.")
+    ids = []
+    for worker in workers:
+        if not isinstance(worker, dict) or worker.get("enabled") is not True:
+            continue
+        worker_id = worker.get("id")
+        if worker_id is not None and str(worker_id).strip():
+            ids.append(str(worker_id).strip())
+    return ids
+
+
+def format_worker_list(config: dict[str, Any]) -> list[str]:
+    workers = config.get("workers", [])
+    if not isinstance(workers, list):
+        raise ValueError("ComfyUI /distributed/config did not return a workers array.")
+    lines = []
+    for worker in workers:
+        if not isinstance(worker, dict):
+            continue
+        worker_id = str(worker.get("id", "?"))
+        name = str(worker.get("name") or "Unnamed worker")
+        worker_type = str(worker.get("type") or "local")
+        enabled = worker.get("enabled") is True
+        lines.append(f"{worker_id}\t{name}\t{worker_type}\t{'enabled' if enabled else 'disabled'}")
+    return lines
+
+
 def safe_master_url(value: str) -> str:
     parsed = urlparse(value)
     if parsed.scheme not in ("http", "https") or not parsed.netloc:
@@ -263,6 +293,7 @@ def main() -> int:
     parser.add_argument("--timeout", type=int, default=60)
     parser.add_argument("--dry-run", action="store_true", help="Validate and print prompts without queueing")
     parser.add_argument("--status", action="store_true", help="Read ComfyUI history for acknowledged jobs")
+    parser.add_argument("--list-workers", action="store_true", help="List configured ComfyUI-Distributed worker IDs")
     parser.add_argument("--pause", type=float, default=0.25, help="Delay between submissions in seconds")
     args = parser.parse_args()
 
@@ -278,9 +309,16 @@ def main() -> int:
         token = os.getenv("SCENEFORGE_PROXY_TOKEN")
         queued = read_checkpoint(args.checkpoint)
 
-        if args.status:
+        if args.status or args.list_workers:
             if not master_url:
-                raise ValueError("--status requires --master-url.")
+                raise ValueError("--status and --list-workers require --master-url.")
+            config = request_json(master_url + "/distributed/config", args.timeout, token)
+            if args.list_workers:
+                lines = format_worker_list(config)
+                print("ID\\tNAME\\tTYPE\\tSTATE")
+                print("\\n".join(lines) if lines else "No workers are configured.")
+                print("Use --workers auto to submit to all enabled workers.")
+                return 0
             return print_status(master_url, queued, args.timeout, token)
 
         if args.manifest is None or args.workflow is None or args.prompt_node is None:
@@ -293,9 +331,15 @@ def main() -> int:
         jobs = manifest.get("jobs")
         if not isinstance(jobs, list) or not jobs:
             raise ValueError("Manifest jobs must be a non-empty array.")
-        workers = [item.strip() for item in args.workers.split(",") if item.strip()]
+        if args.workers.strip().lower() == "auto":
+            if not master_url:
+                raise ValueError("--workers auto requires --master-url.")
+            config = request_json(master_url + "/distributed/config", args.timeout, token)
+            workers = enabled_worker_ids(config)
+        else:
+            workers = [item.strip() for item in args.workers.split(",") if item.strip()]
         if not args.dry_run and not workers:
-            raise ValueError("Provide at least one worker ID with --workers or SCENEFORGE_WORKER_IDS.")
+            raise ValueError("No worker IDs selected. Configure workers in ComfyUI or pass --workers ID1,ID2.")
         if not args.dry_run and not master_url:
             raise ValueError("Provide --master-url or SCENEFORGE_COMFY_MASTER_URL.")
 
