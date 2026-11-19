@@ -119,16 +119,17 @@ function stableSeed(value){let h=2166136261;for(let i=0;i<value.length;i++){h^=v
 $('downloadSceneJobs').addEventListener('click',()=>{
  if(!scenes.length){alert('Build scenes first, then export the jobs.');return}
  const clipSeconds=Number($('clipLength').value),targetSeconds=Number($('runtime').value)*60,aspect=$('jobAspect').value;
+ const frameRate=16,frameCount=clipSeconds*frameRate+1;
  const output=aspect==='16:9'?{width:832,height:480}:aspect==='9:16'?{width:480,height:832}:{width:640,height:640};
  const plannedSeconds=scenes.length*clipSeconds;
  const manifest={
   schemaVersion:'sceneforge.scene-jobs.v1',
   createdAt:new Date().toISOString(),
-  project:{title:$('projectTitle').value.trim()||'Untitled film',targetRuntimeSeconds:targetSeconds,plannedRuntimeSeconds:plannedSeconds,sceneJobCount:scenes.length,clipLengthSeconds:clipSeconds,aspectRatio:aspect,requestedOutput:output},
+  project:{title:$('projectTitle').value.trim()||'Untitled film',targetRuntimeSeconds:targetSeconds,plannedRuntimeSeconds:plannedSeconds,sceneJobCount:scenes.length,clipLengthSeconds:clipSeconds,frameRate,frameCountPerScene:frameCount,aspectRatio:aspect,requestedOutput:output},
   engine:{name:'ComfyUI',distribution:'ComfyUI-Distributed',queueEndpoint:'POST /distributed/queue',workflowFormat:'ComfyUI API prompt JSON'},
-  requirements:['Use a ComfyUI API-format workflow, not the normal UI workflow export.','Include a DistributedCollector node with load_balance enabled for one-scene-per-available-worker scheduling.','Configure the same required model files and custom nodes on each worker.','The workflow controls the actual frame count, resolution and model duration; manifest output dimensions are requested targets only.'],
+  requirements:['Use a ComfyUI API-format workflow, not the normal UI workflow export.','Include a DistributedCollector node with load_balance enabled for one-scene-per-available-worker scheduling.','Configure the same required model files and custom nodes on each worker.','Map this job frameCount to the video node frame/length input and requestedOutput width/height to the model workflow inputs.','The requested output resolution and duration are settings to map; the model workflow determines its supported constraints.'],
   mediaNote:'Reference image names are recorded for handoff. Image bytes are not embedded in this manifest.',
-  jobs:scenes.map((scene,i)=>({jobId:'scene-'+String(i+1).padStart(4,'0'),order:i+1,status:'planned',prompt:scene.text,durationSeconds:clipSeconds,seed:stableSeed(($('projectTitle').value||'sceneforge')+'|'+(i+1)+'|'+scene.text),aspectRatio:aspect,requestedOutput:output,referenceImage:scene.imageFile?.name||null}))
+  jobs:scenes.map((scene,i)=>({jobId:'scene-'+String(i+1).padStart(4,'0'),order:i+1,status:'planned',prompt:scene.text,durationSeconds:clipSeconds,frameRate,frameCount,seed:stableSeed(($('projectTitle').value||'sceneforge')+'|'+(i+1)+'|'+scene.text),aspectRatio:aspect,requestedOutput:output,referenceImage:scene.imageFile?.name||null}))
  };
  const blob=new Blob([JSON.stringify(manifest,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');
  a.href=url;a.download=($('projectTitle').value.trim()||'sceneforge-film').replace(/[^\w-]+/g,'-')+'-scene-jobs.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),30000);
