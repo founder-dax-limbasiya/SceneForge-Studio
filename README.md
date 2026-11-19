@@ -16,7 +16,7 @@ A mobile-friendly, browser-based film assembly studio. This starter focuses on s
 
 ## Important limitations
 
-This repository does **not** yet include text-to-video inference, GPU worker pooling, automatic voice generation, Whisper speech recognition, or word-level subtitle alignment. The UI reports GPU workers as disconnected until a real worker service is integrated.
+This repository includes a direct browser connection panel for a separately hosted ComfyUI-Distributed master. It can discover enabled workers, load an API-format workflow, submit one prompt per scene, and check ComfyUI history. It does **not** provision GPU machines, bundle video model weights, or guarantee that any GPU workers are online. Automatic voice generation, Whisper speech recognition, and word-level subtitle alignment are not connected.
 
 The visual master renderer uses browser Canvas + MediaRecorder and records in real time. Keep the tab open and the device awake. Long renders may fail on mobile devices due to browser memory, battery, thermal, or background-tab limitations. WebM is the supported export format in this starter.
 
@@ -39,9 +39,9 @@ A worker should only be marked available after it passes a real health check and
 
 ## GPU scene-job handoff
 
-The Studio can export a SceneForge scene-job manifest. The standard-library submitter in tools/submit_scene_jobs.py converts each scene prompt into a separate ComfyUI-Distributed queue request, maps optional frame/size/seed settings into workflow nodes, can auto-discover enabled workers, and saves ComfyUI prompt IDs for status checks. See docs/GPU_WORKERS.md for setup, workflow mapping, queueing, status, and security.
+The Studio can export a SceneForge scene-job manifest or submit scenes directly from its in-browser GPU panel. The browser panel connects to a ComfyUI-Distributed master, discovers enabled workers, accepts an API-format workflow, maps prompt/negative prompt/seed/frame/size inputs, queues each scene separately, and checks ComfyUI history. The standard-library submitter in tools/submit_scene_jobs.py remains available for headless sessions. See docs/GPU_WORKERS.md for setup, workflow mapping, queueing, status, and security.
 
-The queue bridge requires a reachable ComfyUI-Distributed master, worker IDs, and a ComfyUI API-format workflow with a load-balanced DistributedCollector. It does not provision a GPU or make an unauthenticated public ComfyUI endpoint safe.
+The queue bridge requires a reachable ComfyUI-Distributed master, configured workers, and a ComfyUI API-format workflow with a load-balanced DistributedCollector. Browser connections also require CORS. The upstream API has no built-in authentication; use a private network/VPN or authenticated HTTPS reverse proxy. SceneForge does not provision GPUs.
 
 ## Tests
 
@@ -55,6 +55,7 @@ List GPU worker IDs:
 
 Queue to all enabled workers with `--workers auto`; inspect acknowledgements with `--status`.
 
-Check the browser JavaScript syntax with:
+Check the browser JavaScript syntax and GPU UI contract with:
 
     node tools/check_frontend.mjs
+    node tools/test_gpu_ui_contract.mjs
