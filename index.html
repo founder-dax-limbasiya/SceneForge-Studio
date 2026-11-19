@@ -18,7 +18,7 @@
 <section class="hero"><div><div class="eyebrow">Your creative command centre</div><h1>Make the story<br>feel like a film.</h1><p>Build your scenes, keep a clean visual master, then shape voice, music and subtitles independently — without rebuilding the visuals.</p></div><div class="hero-meta"><span class="tag">01 · Story</span><span class="tag">02 · Visual master</span><span class="tag">03 · Final cut</span></div></section>
 <div class="layout">
 <main class="maincol">
-<section class="card"><div class="card-head"><div class="step"><div class="stepno">01</div><div><div class="card-title">Story & scenes</div><div class="card-sub">Write your script, then turn its paragraphs into editable scenes.</div></div></div><span class="tag" id="sceneCountTag">0 scenes</span></div>
+<section class="card"><div class="card-head"><div class="step"><div class="stepno">01</div><div><div class="card-title">Story & scenes</div><div class="card-sub">Write your script, then turn its paragraphs into editable scenes.</div></div></div><span class="tag" id="sceneCountTag">0 scenes</span><span class="tag" id="draftStatus">Local autosave on</span></div>
 <label class="field-label" for="projectTitle">Project title</label><input id="projectTitle" class="text-input" value="Untitled film" maxlength="80">
 <div style="height:12px"></div><label class="field-label" for="script">Scene descriptions · separate scenes with a blank line</label><textarea id="script" placeholder="Wide shot: A city wakes beneath a violet sunrise...&#10;&#10;Close shot: A lone traveller steps onto the empty platform..."></textarea>
 <div style="height:12px"></div><label class="field-label" for="visualStyle">Global visual style · applied to every GPU scene</label><input id="visualStyle" class="text-input" value="cinematic film still, natural detailed lighting, coherent color grading, smooth realistic motion" maxlength="500">
@@ -92,14 +92,52 @@ $('captionName').textContent=$('captionText').value.trim()?$('captionText').valu
 function sceneCard(scene,i){
 const node=document.createElement('div');node.className='scene';
 const thumb=document.createElement('div');thumb.className='thumb';if(scene.image){const im=document.createElement('img');im.src=scene.image;thumb.append(im)}else thumb.textContent='SCENE '+String(i+1).padStart(2,'0');
-const copy=document.createElement('div');const idx=document.createElement('div');idx.className='scene-index';idx.textContent='SCENE '+String(i+1).padStart(2,'0');const inp=document.createElement('input');inp.className='text-input';inp.style.padding='8px 9px';inp.style.fontSize='11px';inp.value=scene.text;inp.setAttribute('aria-label','Scene description');inp.addEventListener('input',()=>{scenes[i].text=inp.value;});copy.append(idx,inp);
+const copy=document.createElement('div');const idx=document.createElement('div');idx.className='scene-index';idx.textContent='SCENE '+String(i+1).padStart(2,'0');const inp=document.createElement('input');inp.className='text-input';inp.style.padding='8px 9px';inp.style.fontSize='11px';inp.value=scene.text;inp.setAttribute('aria-label','Scene description');inp.addEventListener('input',()=>{scenes[i].text=inp.value;saveDraft();});copy.append(idx,inp);
 const actions=document.createElement('button');actions.className='btn small';actions.textContent='Image';actions.title='Assign next uploaded image';actions.onclick=()=>{if(!images.length){$('images').click();return}const next=(i)%images.length;scene.image=images[next].url;scene.imageFile=images[next].file;renderScenes();};node.append(thumb,copy,actions);return node;
 }
 function renderScenes(){$('sceneList').replaceChildren(...scenes.map(sceneCard));updateStats()}
+const DRAFT_KEY='sceneforge-studio-draft-v1';
+let draftTimer=null;
+function saveDraft(){
+ try{
+  clearTimeout(draftTimer);
+  draftTimer=setTimeout(()=>{
+   const draft={
+    title:$('projectTitle').value,script:$('script').value,
+    visualStyle:$('visualStyle').value,continuityNotes:$('continuityNotes').value,
+    negativePrompt:$('negativePrompt').value,runtime:$('runtime').value,
+    clipLength:$('clipLength').value,aspect:$('jobAspect').value,
+    sceneTexts:scenes.map(scene=>scene.text)
+   };
+   localStorage.setItem(DRAFT_KEY,JSON.stringify(draft));
+   $('draftStatus').textContent='Draft saved on device';
+  },350);
+ }catch(error){$('draftStatus').textContent='Local save unavailable'}
+}
+function restoreDraft(){
+ try{
+  const raw=localStorage.getItem(DRAFT_KEY);if(!raw)return;
+  const draft=JSON.parse(raw);if(!draft||typeof draft!=='object')return;
+  $('projectTitle').value=typeof draft.title==='string'?draft.title:'Untitled film';
+  $('script').value=typeof draft.script==='string'?draft.script:'';
+  $('visualStyle').value=typeof draft.visualStyle==='string'?draft.visualStyle:'';
+  $('continuityNotes').value=typeof draft.continuityNotes==='string'?draft.continuityNotes:'';
+  $('negativePrompt').value=typeof draft.negativePrompt==='string'?draft.negativePrompt:'';
+  if(['1','3','5','10'].includes(String(draft.runtime)))$('runtime').value=String(draft.runtime);
+  if(['5','8','10'].includes(String(draft.clipLength)))$('clipLength').value=String(draft.clipLength);
+  if(['16:9','9:16','1:1'].includes(String(draft.aspect)))$('jobAspect').value=String(draft.aspect);
+  if($('script').value.trim())$('buildScenes').click();
+  if(Array.isArray(draft.sceneTexts)&&draft.sceneTexts.length===scenes.length){
+   scenes.forEach((scene,index)=>{if(typeof draft.sceneTexts[index]==='string')scene.text=draft.sceneTexts[index]});
+   renderScenes();
+  }
+  $('draftStatus').textContent='Draft restored from this device';
+ }catch(error){$('draftStatus').textContent='Could not restore draft'}
+}
 $('buildScenes').onclick=()=>{
 const raw=$('script').value.trim();if(!raw){$('script').focus();return}
 let parts=raw.split(/\n\s*\n/).map(x=>x.trim()).filter(Boolean);if(parts.length===1&&parts[0].includes('\n'))parts=parts[0].split('\n').map(x=>x.trim()).filter(Boolean);
-scenes=parts.map((text,i)=>({text,image:images[i]?.url||null,imageFile:images[i]?.file||null}));renderScenes();$('captionText').value=scenes.map(s=>s.text).join('\n');updateStats();
+scenes=parts.map((text,i)=>({text,image:images[i]?.url||null,imageFile:images[i]?.file||null}));renderScenes();$('captionText').value=scenes.map(s=>s.text).join('\n');updateStats();saveDraft();
 };
 $('images').addEventListener('change',e=>{
 const files=Array.from(e.target.files||[]).slice(0,30);images.forEach(x=>URL.revokeObjectURL(x.url));images=files.map(file=>({file,url:URL.createObjectURL(file)}));
@@ -116,8 +154,9 @@ $('musicFile').addEventListener('change',e=>setAudio('music',e.target.files[0]))
 function setSwitch(kind,value){if(kind==='voice')voiceEnabled=value;if(kind==='music')musicEnabled=value;if(kind==='caption')captionsEnabled=value;const id=kind==='voice'?'voiceToggle':kind==='music'?'musicToggle':'captionToggle';const id2=id+'2';toggle(id,value);toggle(id2,value)}
 [['voiceToggle','voice'],['voiceToggle2','voice'],['musicToggle','music'],['musicToggle2','music'],['captionToggle','caption'],['captionToggle2','caption']].forEach(([id,k])=>$(id).addEventListener('click',()=>setSwitch(k,!(k==='voice'?voiceEnabled:k==='music'?musicEnabled:captionsEnabled))));
 $('captionText').addEventListener('input',updateStats);$('captionLanguage').addEventListener('change',updateStats);
-$('runtime').addEventListener('change',()=>{$('runtimeLabel').textContent='Target: '+formatTime(Number($('runtime').value)*60);updateStats()});
-$('clipLength').addEventListener('change',updateStats);$('jobAspect').addEventListener('change',updateStats);
+$('runtime').addEventListener('change',()=>{$('runtimeLabel').textContent='Target: '+formatTime(Number($('runtime').value)*60);updateStats();saveDraft()});
+$('clipLength').addEventListener('change',()=>{updateStats();saveDraft()});$('jobAspect').addEventListener('change',()=>{updateStats();saveDraft()});
+['projectTitle','script','visualStyle','continuityNotes','negativePrompt'].forEach(id=>$(id).addEventListener('input',saveDraft));
 function stableSeed(value){let h=2166136261;for(let i=0;i<value.length;i++){h^=value.charCodeAt(i);h=Math.imul(h,16777619)}return (h>>>0)%2147483647}
 $('downloadSceneJobs').addEventListener('click',()=>{
  if(!scenes.length){alert('Build scenes first, then export the jobs.');return}
@@ -208,7 +247,7 @@ requestAnimationFrame(draw);
 }
 $('exportFinal').addEventListener('click',exportFinal);
 $('projectTitle').addEventListener('input',()=>{document.title=($('projectTitle').value||'SceneForge Studio')+' · SceneForge'});
-$('statRuntime').textContent='10:00';updateStats();
+restoreDraft();$('statRuntime').textContent=formatTime(Number($('runtime').value)*60);$('runtimeLabel').textContent='Target: '+formatTime(Number($('runtime').value)*60);updateStats();
 })();
 </script>
 </body></html>
