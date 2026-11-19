@@ -92,8 +92,8 @@ class SubmitterTests(unittest.TestCase):
             {"id": "1", "name": "GPU A", "enabled": True, "type": "local", "host": "10.0.0.1"}
         ]}
         lines = format_worker_list(config)
-        self.assertEqual(lines, ["1\\tGPU A\\tlocal\\tenabled"])
-        self.assertNotIn("10.0.0.1", "\\n".join(lines))
+        self.assertEqual(lines, ["1\tGPU A\tlocal\tenabled"])
+        self.assertNotIn("10.0.0.1", "\n".join(lines))
 
     def test_collector_and_load_balance_required(self):
         validate_workflow(self.workflow["prompt"])
