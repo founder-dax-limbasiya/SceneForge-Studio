@@ -84,12 +84,20 @@ def apply_job(
     width_input: str = "width",
     height_node_id: str | None = None,
     height_input: str = "height",
+    negative_node_id: str | None = None,
+    negative_input: str = "text",
 ) -> dict[str, Any]:
     prompt = copy.deepcopy(prompt_template)
     text = job.get("prompt")
     if not isinstance(text, str) or not text.strip():
         raise ValueError(f"Job {job.get('jobId', '?')} has an empty prompt.")
     set_node_input(prompt, prompt_node_id, prompt_input, text.strip())
+
+    if negative_node_id is not None:
+        negative_text = job.get("negativePrompt", "")
+        if not isinstance(negative_text, str):
+            raise ValueError(f"Job {job.get('jobId', '?')} has an invalid negativePrompt.")
+        set_node_input(prompt, negative_node_id, negative_input, negative_text.strip())
 
     if seed_node_id is not None:
         seed = job.get("seed")
@@ -280,6 +288,8 @@ def main() -> int:
                         help="Comma-separated ComfyUI-Distributed worker IDs")
     parser.add_argument("--prompt-node", help="API workflow node ID containing the text prompt")
     parser.add_argument("--prompt-input", default="text", help="Prompt input name (default: text)")
+    parser.add_argument("--negative-node", help="Optional API workflow negative-prompt node ID")
+    parser.add_argument("--negative-input", default="text", help="Negative prompt input name (default: text)")
     parser.add_argument("--seed-node", help="Optional API workflow seed node ID")
     parser.add_argument("--seed-input", default="seed", help="Seed input name (default: seed)")
     parser.add_argument("--frames-node", help="Optional node ID for the per-shot frame-count input")
@@ -352,6 +362,7 @@ def main() -> int:
                     prompt_template, job, args.prompt_node, args.prompt_input,
                     args.seed_node, args.seed_input, args.frames_node, args.frames_input,
                     args.width_node, args.width_input, args.height_node, args.height_input,
+                    args.negative_node, args.negative_input,
                 )
                 text_value = prepared[str(args.prompt_node)]["inputs"][args.prompt_input]
                 print(f"[DRY RUN] {job.get('jobId')}: {text_value[:100]}")
@@ -369,6 +380,7 @@ def main() -> int:
                 prompt_template, job, args.prompt_node, args.prompt_input,
                 args.seed_node, args.seed_input, args.frames_node, args.frames_input,
                 args.width_node, args.width_input, args.height_node, args.height_input,
+                args.negative_node, args.negative_input,
             )
             payload = {
                 "prompt": prompt,
