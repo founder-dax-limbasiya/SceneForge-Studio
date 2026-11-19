@@ -37,9 +37,9 @@ Replace the prompt node ID with the value from your actual ComfyUI workflow. Use
 
 The manifest includes requestedOutput width/height, frameRate, and frameCount. The submitter can write them into chosen workflow nodes. Example:
 
-    python tools/submit_scene_jobs.py --manifest scene-jobs.json --workflow workflow-api.json --master-url https://YOUR-PRIVATE-COMFYUI-MASTER --workers 1,2 --prompt-node 6 --prompt-input text --seed-node 57 --seed-input seed --frames-node 41 --frames-input length --width-node 41 --width-input width --height-node 41 --height-input height
+    python tools/submit_scene_jobs.py --manifest scene-jobs.json --workflow workflow-api.json --master-url https://YOUR-PRIVATE-COMFYUI-MASTER --workers 1,2 --prompt-node 6 --prompt-input text --negative-node 7 --negative-input text --seed-node 57 --seed-input seed --frames-node 41 --frames-input length --width-node 41 --width-input width --height-node 41 --height-input height
 
-Node IDs and input names above are examples only. Look them up in your own API-format workflow. Not every model workflow uses the same frame, width, and height controls. If you omit the optional mapping flags, the workflow keeps its own defaults. A frame count of duration × 16 + 1 is requested for these starter jobs; the actual model workflow remains responsible for its valid frame constraints.
+Node IDs and input names above are examples only. Look them up in your own API-format workflow. The UI's global visual style and continuity notes are prepended to each shot prompt; the shared negative prompt is passed to the optional negative-prompt node. Not every model workflow uses the same frame, width, and height controls. If you omit the optional mapping flags, the workflow keeps its own defaults. A frame count of duration × 16 + 1 is requested for these starter jobs; the actual model workflow remains responsible for its valid frame constraints.
 
 ### Dry run and status
 
