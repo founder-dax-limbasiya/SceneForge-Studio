@@ -20,8 +20,11 @@
 <main class="maincol">
 <section class="card"><div class="card-head"><div class="step"><div class="stepno">01</div><div><div class="card-title">Story & scenes</div><div class="card-sub">Write your script, then turn its paragraphs into editable scenes.</div></div></div><span class="tag" id="sceneCountTag">0 scenes</span></div>
 <label class="field-label" for="projectTitle">Project title</label><input id="projectTitle" class="text-input" value="Untitled film" maxlength="80">
-<div style="height:12px"></div><label class="field-label" for="script">Script · separate scenes with a blank line</label><textarea id="script" placeholder="The city wakes beneath a violet sunrise...&#10;&#10;A lone traveller steps onto the empty platform..."></textarea>
-<div class="row between" style="margin-top:10px"><span class="hint">Each paragraph becomes a scene. You can edit it below.</span><button class="btn primary" id="buildScenes">Build scenes ↗</button></div>
+<div style="height:12px"></div><label class="field-label" for="script">Scene descriptions · separate scenes with a blank line</label><textarea id="script" placeholder="Wide shot: A city wakes beneath a violet sunrise...&#10;&#10;Close shot: A lone traveller steps onto the empty platform..."></textarea>
+<div style="height:12px"></div><label class="field-label" for="visualStyle">Global visual style · applied to every GPU scene</label><input id="visualStyle" class="text-input" value="cinematic film still, natural detailed lighting, coherent color grading, smooth realistic motion" maxlength="500">
+<div style="height:10px"></div><label class="field-label" for="continuityNotes">Character & continuity notes · keep subjects consistent across scenes</label><textarea id="continuityNotes" rows="2" style="min-height:72px" placeholder="Main character: same young traveller, charcoal coat, small brown backpack. Keep face, costume and locations consistent."></textarea>
+<div style="height:10px"></div><label class="field-label" for="negativePrompt">Negative prompt · shared across all scenes</label><textarea id="negativePrompt" rows="2" style="min-height:65px" placeholder="blurry, flicker, distorted anatomy, extra limbs, text, watermark"></textarea>
+<div class="row between" style="margin-top:10px"><span class="hint">Each paragraph becomes a shot. Visual style and continuity notes are added to every GPU prompt.</span><button class="btn primary" id="buildScenes">Build scenes ↗</button></div>
 <div id="sceneList" class="scene-list" style="margin-top:13px"></div>
 <div class="master-box" style="margin-top:14px">
  <div class="card-title" style="margin-bottom:10px">GPU scene jobs</div>
@@ -122,14 +125,15 @@ $('downloadSceneJobs').addEventListener('click',()=>{
  const frameRate=16,frameCount=clipSeconds*frameRate+1;
  const output=aspect==='16:9'?{width:832,height:480}:aspect==='9:16'?{width:480,height:832}:{width:640,height:640};
  const plannedSeconds=scenes.length*clipSeconds;
+ const visualStyle=$('visualStyle').value.trim(),continuityNotes=$('continuityNotes').value.trim(),negativePrompt=$('negativePrompt').value.trim();
  const manifest={
   schemaVersion:'sceneforge.scene-jobs.v1',
   createdAt:new Date().toISOString(),
-  project:{title:$('projectTitle').value.trim()||'Untitled film',targetRuntimeSeconds:targetSeconds,plannedRuntimeSeconds:plannedSeconds,sceneJobCount:scenes.length,clipLengthSeconds:clipSeconds,frameRate,frameCountPerScene:frameCount,aspectRatio:aspect,requestedOutput:output},
+  project:{title:$('projectTitle').value.trim()||'Untitled film',targetRuntimeSeconds:targetSeconds,plannedRuntimeSeconds:plannedSeconds,sceneJobCount:scenes.length,clipLengthSeconds:clipSeconds,frameRate,frameCountPerScene:frameCount,aspectRatio:aspect,requestedOutput:output,visualStyle,continuityNotes,negativePrompt},
   engine:{name:'ComfyUI',distribution:'ComfyUI-Distributed',queueEndpoint:'POST /distributed/queue',workflowFormat:'ComfyUI API prompt JSON'},
-  requirements:['Use a ComfyUI API-format workflow, not the normal UI workflow export.','Include a DistributedCollector node with load_balance enabled for one-scene-per-available-worker scheduling.','Configure the same required model files and custom nodes on each worker.','Map this job frameCount to the video node frame/length input and requestedOutput width/height to the model workflow inputs.','The requested output resolution and duration are settings to map; the model workflow determines its supported constraints.'],
+  requirements:['Use a ComfyUI API-format prompt, not the normal UI workflow export.','Include a DistributedCollector node with load_balance enabled for one-scene-per-available-worker scheduling.','Configure the same required model files and custom nodes on each worker.','Map this job frameCount to the video node frame/length input and requestedOutput width/height to the model workflow inputs.','Map negativePrompt to the workflow negative prompt encoder when your model uses one.','The requested output resolution and duration are settings to map; the model workflow determines its supported constraints.'],
   mediaNote:'Reference image names are recorded for handoff. Image bytes are not embedded in this manifest.',
-  jobs:scenes.map((scene,i)=>({jobId:'scene-'+String(i+1).padStart(4,'0'),order:i+1,status:'planned',prompt:scene.text,durationSeconds:clipSeconds,frameRate,frameCount,seed:stableSeed(($('projectTitle').value||'sceneforge')+'|'+(i+1)+'|'+scene.text),aspectRatio:aspect,requestedOutput:output,referenceImage:scene.imageFile?.name||null}))
+  jobs:scenes.map((scene,i)=>({jobId:'scene-'+String(i+1).padStart(4,'0'),order:i+1,status:'planned',shotDescription:scene.text,prompt:[continuityNotes,visualStyle,scene.text].filter(Boolean).join('. '),negativePrompt,durationSeconds:clipSeconds,frameRate,frameCount,seed:stableSeed(($('projectTitle').value||'sceneforge')+'|'+(i+1)+'|'+scene.text),aspectRatio:aspect,requestedOutput:output,referenceImage:scene.imageFile?.name||null}))
  };
  const blob=new Blob([JSON.stringify(manifest,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');
  a.href=url;a.download=($('projectTitle').value.trim()||'sceneforge-film').replace(/[^\w-]+/g,'-')+'-scene-jobs.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),30000);
