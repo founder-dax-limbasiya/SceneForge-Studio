@@ -22,11 +22,13 @@ class SubmitterTests(unittest.TestCase):
                 "7": {"class_type": "KSampler", "inputs": {"seed": 1}},
                 "8": {"class_type": "WanImageToVideo", "inputs": {"length": 81, "width": 832, "height": 480}},
                 "9": {"class_type": "DistributedCollector", "inputs": {"load_balance": True}},
+                "10": {"class_type": "CLIPTextEncode", "inputs": {"text": "old negative"}},
             }
         }
         self.job = {
             "jobId": "scene-1",
             "prompt": "A cinematic wide shot",
+            "negativePrompt": "blur, artifacts",
             "seed": 123,
             "durationSeconds": 5,
             "frameRate": 16,
@@ -51,6 +53,14 @@ class SubmitterTests(unittest.TestCase):
         self.assertEqual(result["8"]["inputs"]["length"], 81)
         self.assertEqual(result["8"]["inputs"]["width"], 832)
         self.assertEqual(result["8"]["inputs"]["height"], 480)
+
+    def test_maps_negative_prompt(self):
+        result = apply_job(
+            self.workflow["prompt"], self.job, "6", "text",
+            negative_node_id="10", negative_input="text",
+        )
+        self.assertEqual(result["10"]["inputs"]["text"], "blur, artifacts")
+        self.assertEqual(self.workflow["prompt"]["10"]["inputs"]["text"], "old negative")
 
     def test_calculates_frames_when_missing(self):
         job = dict(self.job)
