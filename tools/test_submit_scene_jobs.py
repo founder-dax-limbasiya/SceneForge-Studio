@@ -4,6 +4,8 @@ from pathlib import Path
 
 from submit_scene_jobs import (
     apply_job,
+    enabled_worker_ids,
+    format_worker_list,
     extract_prompt,
     read_checkpoint,
     safe_master_url,
@@ -76,6 +78,22 @@ class SubmitterTests(unittest.TestCase):
     def test_url_credentials_rejected(self):
         with self.assertRaises(ValueError):
             safe_master_url("https://user:secret@example.com")
+
+    def test_auto_worker_discovery_uses_enabled_ids_only(self):
+        config = {"workers": [
+            {"id": "1", "name": "GPU A", "enabled": True, "type": "local"},
+            {"id": "2", "name": "GPU B", "enabled": False, "type": "remote"},
+            {"id": "cloud-3", "name": "Cloud GPU", "enabled": True, "type": "cloud"},
+        ]}
+        self.assertEqual(enabled_worker_ids(config), ["1", "cloud-3"])
+
+    def test_worker_list_omits_host_details(self):
+        config = {"workers": [
+            {"id": "1", "name": "GPU A", "enabled": True, "type": "local", "host": "10.0.0.1"}
+        ]}
+        lines = format_worker_list(config)
+        self.assertEqual(lines, ["1\\tGPU A\\tlocal\\tenabled"])
+        self.assertNotIn("10.0.0.1", "\\n".join(lines))
 
     def test_collector_and_load_balance_required(self):
         validate_workflow(self.workflow["prompt"])
