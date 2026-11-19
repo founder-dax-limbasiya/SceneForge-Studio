@@ -37,7 +37,7 @@ A worker should only be marked available after it passes a real health check and
 
 ## GPU scene-job handoff
 
-The Studio can export a SceneForge scene-job manifest. The standard-library submitter in tools/submit_scene_jobs.py converts each scene prompt into a separate ComfyUI-Distributed queue request. See docs/GPU_WORKERS.md for the worker setup, workflow requirements, queue command, retry behavior, and security warning.
+The Studio can export a SceneForge scene-job manifest. The standard-library submitter in tools/submit_scene_jobs.py converts each scene prompt into a separate ComfyUI-Distributed queue request, maps optional frame/size/seed settings into workflow nodes, can auto-discover enabled workers, and saves ComfyUI prompt IDs for status checks. See docs/GPU_WORKERS.md for setup, workflow mapping, queueing, status, and security.
 
 The queue bridge requires a reachable ComfyUI-Distributed master, worker IDs, and a ComfyUI API-format workflow with a load-balanced DistributedCollector. It does not provision a GPU or make an unauthenticated public ComfyUI endpoint safe.
 
@@ -46,6 +46,12 @@ The queue bridge requires a reachable ComfyUI-Distributed master, worker IDs, an
 Run the Python submitter tests with:
 
     python -m unittest discover -s tools -p "test_*.py" -v
+
+List GPU worker IDs:
+
+    python tools/submit_scene_jobs.py --master-url https://YOUR-PRIVATE-COMFYUI-MASTER --list-workers
+
+Queue to all enabled workers with `--workers auto`; inspect acknowledgements with `--status`.
 
 Check the browser JavaScript syntax with:
 
