@@ -36,6 +36,52 @@
  <div class="row between" style="margin-top:12px"><span class="progress-label" id="sceneJobEstimate">0 jobs · add scenes to plan GPU renders</span><button class="btn primary" id="downloadSceneJobs">Export scene jobs ↓</button></div>
  <div class="hint">Exports prompts and scene settings only. It does not start GPU rendering or upload your media.</div>
 </div>
+<div class="master-box" style="margin-top:14px">
+ <div class="row between"><div><div class="card-title">Connect your GPU render engine</div><div class="card-sub">ComfyUI master + ComfyUI-Distributed workers</div></div><span class="tag" id="gpuConnectionBadge">Not connected</span></div>
+ <label class="field-label" for="gpuMasterUrl" style="margin-top:12px">ComfyUI master URL · HTTPS required</label>
+ <input id="gpuMasterUrl" class="text-input" inputmode="url" placeholder="https://your-secure-comfyui-host">
+ <label class="field-label" for="gpuProxyToken" style="margin-top:10px">Reverse-proxy access token · optional</label>
+ <input id="gpuProxyToken" class="text-input" type="password" autocomplete="off" placeholder="Only when your private proxy requires it">
+ <div class="row" style="margin-top:10px"><button class="btn primary" id="gpuConnectBtn">Test connection & find workers</button><button class="btn subtle" id="gpuRefreshBtn" disabled>Refresh</button></div>
+ <div class="statusline" id="gpuConnectionState">Not connected. Your ComfyUI master must be reachable over HTTPS and allow browser CORS.</div>
+ <div id="gpuWorkers" class="hint">No worker information loaded.</div>
+ <div class="divider" style="height:1px;background:var(--line);margin:14px 0"></div>
+ <div class="card-title">Load ComfyUI API workflow</div>
+ <div class="card-sub">Upload the API-format JSON exported from ComfyUI, not the normal workflow canvas JSON.</div>
+ <input id="gpuWorkflowFile" type="file" accept="application/json,.json" class="file-input" style="margin-top:10px">
+ <div class="statusline" id="gpuWorkflowState">No API workflow loaded.</div>
+ <div class="row" style="margin-top:10px">
+  <div style="flex:1;min-width:120px"><label class="field-label" for="gpuPromptNode">Positive prompt node ID</label><input id="gpuPromptNode" class="text-input" placeholder="e.g. 6"></div>
+  <div style="flex:1;min-width:120px"><label class="field-label" for="gpuPromptInput">Prompt input</label><input id="gpuPromptInput" class="text-input" value="text"></div>
+ </div>
+ <details style="margin-top:12px"><summary style="font-size:12px;color:#c3b8ff;cursor:pointer">Advanced workflow mapping · optional</summary>
+  <div class="row" style="margin-top:12px">
+   <div style="flex:1;min-width:120px"><label class="field-label" for="gpuNegativeNode">Negative node ID</label><input id="gpuNegativeNode" class="text-input" placeholder="Optional"></div>
+   <div style="flex:1;min-width:120px"><label class="field-label" for="gpuNegativeInput">Negative input</label><input id="gpuNegativeInput" class="text-input" value="text"></div>
+  </div>
+  <div class="row" style="margin-top:9px">
+   <div style="flex:1;min-width:120px"><label class="field-label" for="gpuSeedNode">Seed node ID</label><input id="gpuSeedNode" class="text-input" placeholder="Optional"></div>
+   <div style="flex:1;min-width:120px"><label class="field-label" for="gpuSeedInput">Seed input</label><input id="gpuSeedInput" class="text-input" value="seed"></div>
+  </div>
+  <div class="row" style="margin-top:9px">
+   <div style="flex:1;min-width:120px"><label class="field-label" for="gpuFramesNode">Frame-count node ID</label><input id="gpuFramesNode" class="text-input" placeholder="Optional"></div>
+   <div style="flex:1;min-width:120px"><label class="field-label" for="gpuFramesInput">Frames input</label><input id="gpuFramesInput" class="text-input" value="length"></div>
+  </div>
+  <div class="row" style="margin-top:9px">
+   <div style="flex:1;min-width:120px"><label class="field-label" for="gpuWidthNode">Width node ID</label><input id="gpuWidthNode" class="text-input" placeholder="Optional"></div>
+   <div style="flex:1;min-width:120px"><label class="field-label" for="gpuWidthInput">Width input</label><input id="gpuWidthInput" class="text-input" value="width"></div>
+  </div>
+  <div class="row" style="margin-top:9px">
+   <div style="flex:1;min-width:120px"><label class="field-label" for="gpuHeightNode">Height node ID</label><input id="gpuHeightNode" class="text-input" placeholder="Optional"></div>
+   <div style="flex:1;min-width:120px"><label class="field-label" for="gpuHeightInput">Height input</label><input id="gpuHeightInput" class="text-input" value="height"></div>
+  </div>
+ </details>
+ <div class="row between" style="margin-top:14px"><span class="progress-label" id="gpuQueueEstimate">0 scene jobs ready</span><button class="btn primary" id="gpuQueueBtn" disabled>Queue GPU scenes ↗</button></div>
+ <div class="row between" style="margin-top:8px"><span class="small-muted">Queue acknowledgements</span><button class="btn small" id="gpuStatusBtn" disabled>Check render status</button></div>
+ <div class="statusline" id="gpuQueueState">Connect a master and load an API workflow to enable GPU submission.</div>
+ <div id="gpuJobList" class="scene-list" style="margin-top:10px"></div>
+ <div class="notice" style="margin-top:12px"><b>Security:</b> Never expose raw ComfyUI port 8188 to the public internet. Use a private network/VPN or an HTTPS reverse proxy with authentication. The optional proxy token stays in this tab's memory and is not saved. Enable CORS on the ComfyUI master.</div>
+</div>
 </section>
 <section class="card"><div class="card-head"><div class="step"><div class="stepno">02</div><div><div class="card-title">Visual assets</div><div class="card-sub">Upload images to use as scene visuals. GPU video generation is a later worker integration.</div></div></div><span class="tag">Local files</span></div>
 <div class="upload-grid"><div class="upload"><div><strong>▧ Scene images</strong><br><small>JPG, PNG or WebP · up to 30 images</small></div><input id="images" class="file-input" type="file" accept="image/*" multiple></div><div class="upload"><div><strong>▣ Visual master</strong><br><small>Use a previously rendered visual-only video</small></div><input id="masterUpload" class="file-input" type="file" accept="video/*"></div></div>
@@ -167,6 +213,171 @@ $('runtime').addEventListener('change',()=>{$('runtimeLabel').textContent='Targe
 $('clipLength').addEventListener('change',()=>{updateStats();saveDraft()});$('jobAspect').addEventListener('change',()=>{updateStats();saveDraft()});
 ['projectTitle','script','visualStyle','continuityNotes','negativePrompt'].forEach(id=>$(id).addEventListener('input',saveDraft));
 function stableSeed(value){let h=2166136261;for(let i=0;i<value.length;i++){h^=value.charCodeAt(i);h=Math.imul(h,16777619)}return (h>>>0)%2147483647}
+let gpuWorkers=[],gpuWorkflow=null,gpuProxyToken='';
+let gpuJobs=[];
+const GPU_JOBS_KEY='sceneforge-gpu-jobs-v1';
+const readGpuJobs=()=>{try{const v=JSON.parse(localStorage.getItem(GPU_JOBS_KEY)||'[]');return Array.isArray(v)?v:[]}catch{return []}};
+const saveGpuJobs=()=>{try{localStorage.setItem(GPU_JOBS_KEY,JSON.stringify(gpuJobs.slice(-250)))}catch{}};
+function setGpuStatus(message,state='info'){
+ $('gpuConnectionState').textContent=message;
+ $('gpuConnectionBadge').textContent=state==='ok'?'Connected':state==='error'?'Connection error':'Not connected';
+}
+function gpuMasterBase(){
+ const raw=$('gpuMasterUrl').value.trim();
+ if(!raw)throw new Error('Enter your ComfyUI master URL first.');
+ let url;try{url=new URL(raw)}catch{throw new Error('Enter a valid full URL, including https://')}
+ if(!['https:','http:'].includes(url.protocol))throw new Error('Use HTTPS for the ComfyUI master.');
+ if(url.protocol==='http:'&&!['localhost','127.0.0.1','[::1]'].includes(url.hostname))throw new Error('Public ComfyUI hosts must use HTTPS.');
+ if(url.username||url.password)throw new Error('Do not put usernames or passwords inside the URL. Use a private HTTPS proxy.');
+ return url.origin+url.pathname.replace(/\/+$/,'');
+}
+async function gpuRequest(path,options={}){
+ const base=gpuMasterBase(),controller=new AbortController(),timer=setTimeout(()=>controller.abort(),20000);
+ const headers={Accept:'application/json',...(options.body?{'Content-Type':'application/json'}:{}),...(gpuProxyToken?{Authorization:'Bearer '+gpuProxyToken}:{})};
+ try{
+  const response=await fetch(base+path,{...options,headers,mode:'cors',credentials:'omit',cache:'no-store',signal:controller.signal});
+  const body=await response.text();let data={};try{data=body?JSON.parse(body):{}}catch{throw new Error('ComfyUI returned a non-JSON response.')}
+  if(!response.ok)throw new Error(data.message||data.error||('ComfyUI returned HTTP '+response.status));
+  return data;
+ }catch(error){
+  if(error.name==='AbortError')throw new Error('Connection timed out. Check that your ComfyUI master is running.');
+  if(error instanceof TypeError)throw new Error('Browser could not reach ComfyUI. Check HTTPS, CORS and proxy settings.');
+  throw error;
+ }finally{clearTimeout(timer)}
+}
+function updateGpuControls(){
+ const ready=scenes.length>0&&gpuWorkflow&&gpuWorkers.length>0;
+ $('gpuQueueBtn').disabled=!ready;
+ $('gpuRefreshBtn').disabled=!$('gpuMasterUrl').value.trim();
+ $('gpuStatusBtn').disabled=!gpuJobs.some(j=>j.prompt_id);
+ $('gpuQueueEstimate').textContent=scenes.length+' scene(s) · '+gpuWorkers.length+' enabled worker(s) · '+gpuJobs.filter(j=>j.prompt_id).length+' queued before';
+}
+function renderGpuWorkers(){
+ const box=$('gpuWorkers');box.replaceChildren();
+ if(!gpuWorkers.length){box.textContent='No enabled workers found in master configuration.';updateGpuControls();return}
+ const label=document.createElement('div');label.className='hint';label.textContent=gpuWorkers.length+' enabled worker ID(s) from ComfyUI configuration. Actual availability is checked by the master when a job is queued.';box.append(label);
+ gpuWorkers.forEach(worker=>{const row=document.createElement('div');row.className='row between';row.style.padding='6px 0';const name=document.createElement('span');name.style.fontSize='11px';name.textContent=(worker.name||'Worker')+' · '+worker.id;const type=document.createElement('span');type.className='tag';type.textContent=worker.type||'worker';row.append(name,type);box.append(row)});
+ updateGpuControls();
+}
+$('gpuConnectBtn').addEventListener('click',async()=>{
+ try{
+  gpuProxyToken=$('gpuProxyToken').value.trim();
+  setGpuStatus('Connecting to ComfyUI master…');
+  $('gpuConnectBtn').disabled=true;
+  const config=await gpuRequest('/distributed/config');
+  if(!Array.isArray(config.workers))throw new Error('This endpoint did not return a ComfyUI-Distributed workers list.');
+  gpuWorkers=config.workers.filter(w=>w&&w.enabled===true&&w.id!==undefined).map(w=>({id:String(w.id),name:String(w.name||'Worker'),type:String(w.type||'worker')}));
+  renderGpuWorkers();setGpuStatus('Master connected. '+gpuWorkers.length+' worker(s) enabled in its config. Live dispatch is checked when queuing.','ok');
+ }catch(error){gpuWorkers=[];renderGpuWorkers();setGpuStatus(error.message,'error')}
+ finally{$('gpuConnectBtn').disabled=false}
+});
+$('gpuRefreshBtn').addEventListener('click',()=>$('gpuConnectBtn').click());
+$('gpuWorkflowFile').addEventListener('change',async e=>{
+ const file=e.target.files?.[0];if(!file)return;
+ if(file.size>12*1024*1024){gpuWorkflow=null;$('gpuWorkflowState').textContent='Workflow JSON exceeds 12 MB.';updateGpuControls();return}
+ try{
+  const data=JSON.parse(await file.text()),prompt=data.prompt&&typeof data.prompt==='object'?data.prompt:data;
+  if(!prompt||typeof prompt!=='object'||Array.isArray(prompt)||!Object.keys(prompt).length)throw new Error('Expected a non-empty ComfyUI API-format prompt object.');
+  const nodes=Object.values(prompt);
+  if(!nodes.every(n=>n&&typeof n==='object'&&typeof n.class_type==='string'&&n.inputs&&typeof n.inputs==='object'))throw new Error('This does not look like an API-format workflow. Export API JSON from ComfyUI.');
+  const collectors=nodes.filter(n=>n.class_type==='DistributedCollector');
+  if(!collectors.some(n=>n.inputs.load_balance===true))throw new Error('Workflow needs a DistributedCollector with load_balance enabled.');
+  gpuWorkflow=prompt;
+  $('gpuWorkflowState').textContent='API workflow loaded · '+Object.keys(prompt).length+' nodes · load-balanced collector found.';
+ }catch(error){gpuWorkflow=null;$('gpuWorkflowState').textContent='Workflow error: '+error.message}
+ updateGpuControls();
+});
+function makeGpuJobPrompt(scene,index){
+ const prompt=JSON.parse(JSON.stringify(gpuWorkflow));
+ const clipSeconds=Number($('clipLength').value),frameRate=16;
+ const aspect=$('jobAspect').value,output=aspect==='16:9'?{width:832,height:480}:aspect==='9:16'?{width:480,height:832}:{width:640,height:640};
+ const title=$('projectTitle').value.trim()||'Untitled film';
+ const visualStyle=$('visualStyle').value.trim(),continuity=$('continuityNotes').value.trim();
+ const positive=[continuity,visualStyle,scene.text].filter(Boolean).join('. ');
+ const negative=$('negativePrompt').value.trim();
+ const get=id=>$(id).value.trim();
+ const set=(nodeId,inputId,value,label)=>{
+  const node=prompt[nodeId];
+  if(!node||!node.inputs||!(inputId in node.inputs))throw new Error(label+' node/input not found: '+nodeId+'.'+inputId);
+  node.inputs[inputId]=value;
+ };
+ set(get('gpuPromptNode'),get('gpuPromptInput')||'text',positive,'Positive prompt');
+ const optional=[
+  ['gpuNegativeNode','gpuNegativeInput',negative,'Negative prompt'],
+  ['gpuSeedNode','gpuSeedInput',stableSeed(title+'|'+(index+1)+'|'+scene.text),'Seed'],
+  ['gpuFramesNode','gpuFramesInput',clipSeconds*frameRate+1,'Frame count'],
+  ['gpuWidthNode','gpuWidthInput',output.width,'Width'],
+  ['gpuHeightNode','gpuHeightInput',output.height,'Height']
+ ];
+ optional.forEach(([nodeField,inputField,value,label])=>{const nodeId=get(nodeField);if(nodeId)set(nodeId,get(inputField)||({ 'Negative prompt':'text','Seed':'seed','Frame count':'length','Width':'width','Height':'height'}[label]),value,label)});
+ return prompt;
+}
+function drawGpuJobs(){
+ const box=$('gpuJobList');box.replaceChildren();
+ const visible=gpuJobs.slice(-20).reverse();
+ visible.forEach(job=>{
+  const row=document.createElement('div');row.className='scene';
+  const icon=document.createElement('div');icon.className='thumb';icon.textContent=String(job.order||'?').padStart(2,'0');
+  const body=document.createElement('div');const name=document.createElement('div');name.className='scene-name';name.textContent=job.job_id||'Scene job';
+  const meta=document.createElement('div');meta.className='scene-text';meta.textContent=(job.status||'queued')+(job.prompt_id?' · '+job.prompt_id.slice(0,12):'');
+  body.append(name,meta);const badge=document.createElement('span');badge.className='tag';badge.textContent=job.status||'queued';row.append(icon,body,badge);box.append(row);
+ });
+ updateGpuControls();
+}
+$('gpuQueueBtn').addEventListener('click',async()=>{
+ if(!scenes.length||!gpuWorkflow||!gpuWorkers.length)return;
+ const promptNode=$('gpuPromptNode').value.trim();
+ if(!promptNode){$('gpuQueueState').textContent='Enter the positive prompt node ID from your API workflow.';return}
+ try{scenes.forEach((scene,i)=>makeGpuJobPrompt(scene,i))}catch(error){$('gpuQueueState').textContent='Workflow mapping error: '+error.message;return}
+ if(!confirm('Queue '+scenes.length+' scene job(s) on '+gpuWorkers.length+' enabled GPU worker(s)? The master may also participate if configured.'))return;
+ $('gpuQueueBtn').disabled=true;$('gpuQueueState').textContent='Preparing scene submissions…';
+ let accepted=0;
+ for(let i=0;i<scenes.length;i++){
+  const jobId='scene-'+String(i+1).padStart(4,'0');
+  const already=gpuJobs.find(j=>j.job_id===jobId&&j.project_title===($('projectTitle').value.trim()||'Untitled film')&&j.status!=='error');
+  if(already){accepted++;continue}
+  let prompt;
+  try{prompt=makeGpuJobPrompt(scenes[i],i)}catch(error){$('gpuQueueState').textContent='Stopped before '+jobId+': '+error.message;break}
+  const trace='sceneforge-'+Date.now()+'-'+(i+1);
+  const payload={prompt,client_id:'sceneforge-studio',delegate_master:false,enabled_worker_ids:gpuWorkers.map(w=>w.id),auto_prepare:true,trace_execution_id:trace};
+  const record={job_id:jobId,order:i+1,project_title:$('projectTitle').value.trim()||'Untitled film',status:'submitting',prompt_id:null,created_at:new Date().toISOString()};
+  gpuJobs.push(record);saveGpuJobs();drawGpuJobs();
+  try{
+   const result=await gpuRequest('/distributed/queue',{method:'POST',body:JSON.stringify(payload)});
+   if(typeof result.prompt_id!=='string'||!result.prompt_id)throw new Error('Master response did not include a prompt ID.');
+   record.status='queued';record.prompt_id=result.prompt_id;record.worker_count=Number(result.worker_count||0);record.trace_execution_id=trace;accepted++;saveGpuJobs();drawGpuJobs();
+   $('gpuQueueState').textContent='Accepted '+accepted+' / '+scenes.length+' scene job(s). Latest: '+record.prompt_id+' · workers dispatched: '+record.worker_count+'.';
+  }catch(error){
+   record.status='unknown';record.error=error.message;saveGpuJobs();drawGpuJobs();
+   $('gpuQueueState').textContent='Stopped at '+jobId+': '+error.message+' Check ComfyUI queue/history before retrying; the request may have reached the server.';
+   break;
+  }
+ }
+ if(accepted===scenes.length)$('gpuQueueState').textContent='All '+accepted+' scene jobs acknowledged by ComfyUI. This confirms queue acceptance, not completed video renders.';
+ drawGpuJobs();
+});
+$('gpuStatusBtn').addEventListener('click',async()=>{
+ const targets=gpuJobs.filter(j=>j.prompt_id).slice(-60);
+ if(!targets.length)return;
+ $('gpuQueueState').textContent='Checking ComfyUI history…';let updated=0;
+ for(const job of targets){
+  try{
+   const history=await gpuRequest('/history/'+encodeURIComponent(job.prompt_id));
+   const entry=history[job.prompt_id];
+   if(!entry){job.status='pending / not in history';continue}
+   const status=entry.status&&typeof entry.status==='object'?entry.status:{};
+   const label=String(status.status_str||'unknown').toLowerCase();
+   if(status.completed===true&&(label==='success'||label==='completed'))job.status='success';
+   else if(label==='error'||label==='failed')job.status='error';
+   else job.status='processing';
+   job.output_nodes=entry.outputs&&typeof entry.outputs==='object'?Object.keys(entry.outputs).length:0;
+   updated++;
+  }catch(error){job.status='status unavailable'}
+  saveGpuJobs();
+ }
+ drawGpuJobs();$('gpuQueueState').textContent='History checked. '+updated+' job record(s) read; anything absent from history may still be queued or may have aged out.';
+});
+gpuJobs=readGpuJobs();drawGpuJobs();
 $('downloadSceneJobs').addEventListener('click',()=>{
  if(!scenes.length){alert('Build scenes first, then export the jobs.');return}
  const clipSeconds=Number($('clipLength').value),targetSeconds=Number($('runtime').value)*60,aspect=$('jobAspect').value;
