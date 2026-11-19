@@ -25,7 +25,7 @@
 <div style="height:10px"></div><label class="field-label" for="continuityNotes">Character & continuity notes · keep subjects consistent across scenes</label><textarea id="continuityNotes" rows="2" style="min-height:72px" placeholder="Main character: same young traveller, charcoal coat, small brown backpack. Keep face, costume and locations consistent."></textarea>
 <div style="height:10px"></div><label class="field-label" for="negativePrompt">Negative prompt · shared across all scenes</label><textarea id="negativePrompt" rows="2" style="min-height:65px" placeholder="blurry, flicker, distorted anatomy, extra limbs, text, watermark"></textarea>
 <div class="hint">Text and render settings auto-save on this device. Uploaded images, music, voiceover and video files must be added again after a page refresh.</div>
-<div class="row between" style="margin-top:10px"><span class="hint">Each paragraph becomes a shot. Visual style and continuity notes are added to every GPU prompt.</span><button class="btn primary" id="buildScenes">Build scenes ↗</button></div>
+<div class="row between" style="margin-top:10px"><span class="hint">Each paragraph becomes a shot. Visual style and continuity notes are added to every GPU prompt.</span><div class="row"><button class="btn small" id="exportDraft">Backup draft ↓</button><label class="btn small" style="display:inline-flex;align-items:center">Import draft<input id="importDraft" type="file" accept="application/json,.json" style="display:none"></label><button class="btn primary" id="buildScenes">Build scenes ↗</button></div></div>
 <div id="sceneList" class="scene-list" style="margin-top:13px"></div>
 <div class="master-box" style="margin-top:14px">
  <div class="card-title" style="margin-bottom:10px">GPU scene jobs</div>
@@ -99,26 +99,33 @@ const actions=document.createElement('button');actions.className='btn small';act
 function renderScenes(){$('sceneList').replaceChildren(...scenes.map(sceneCard));updateStats()}
 const DRAFT_KEY='sceneforge-studio-draft-v1';
 let draftTimer=null;
+function currentDraft(){
+ return {
+  schemaVersion:'sceneforge.draft.v1',
+  title:$('projectTitle').value,script:$('script').value,
+  visualStyle:$('visualStyle').value,continuityNotes:$('continuityNotes').value,
+  negativePrompt:$('negativePrompt').value,captionText:$('captionText').value,
+  captionLanguage:$('captionLanguage').value,voiceEnabled,musicEnabled,captionsEnabled,
+  runtime:$('runtime').value,clipLength:$('clipLength').value,aspect:$('jobAspect').value
+ };
+}
 function saveDraft(){
  try{
   clearTimeout(draftTimer);
   draftTimer=setTimeout(()=>{
-   const draft={
-    title:$('projectTitle').value,script:$('script').value,
-    visualStyle:$('visualStyle').value,continuityNotes:$('continuityNotes').value,
-    negativePrompt:$('negativePrompt').value,captionText:$('captionText').value,
-    captionLanguage:$('captionLanguage').value,voiceEnabled,musicEnabled,captionsEnabled,
-    runtime:$('runtime').value,clipLength:$('clipLength').value,aspect:$('jobAspect').value
-   };
-   localStorage.setItem(DRAFT_KEY,JSON.stringify(draft));
+   localStorage.setItem(DRAFT_KEY,JSON.stringify(currentDraft()));
    $('draftStatus').textContent='Draft saved on device';
   },350);
  }catch(error){$('draftStatus').textContent='Local save unavailable'}
 }
-function restoreDraft(){
+function restoreDraft(providedDraft=null){
  try{
-  const raw=localStorage.getItem(DRAFT_KEY);if(!raw)return;
-  const draft=JSON.parse(raw);if(!draft||typeof draft!=='object')return;
+  let draft=providedDraft;
+  if(!draft){
+   const raw=localStorage.getItem(DRAFT_KEY);if(!raw)return;
+   draft=JSON.parse(raw);
+  }
+  if(!draft||typeof draft!=='object')return;
   $('projectTitle').value=typeof draft.title==='string'?draft.title:'Untitled film';
   $('script').value=typeof draft.script==='string'?draft.script:'';
   $('visualStyle').value=typeof draft.visualStyle==='string'?draft.visualStyle:'';
@@ -249,6 +256,24 @@ requestAnimationFrame(draw);
 }
 $('exportFinal').addEventListener('click',exportFinal);
 $('projectTitle').addEventListener('input',()=>{document.title=($('projectTitle').value||'SceneForge Studio')+' · SceneForge'});
+$('exportDraft').addEventListener('click',()=>{
+ const blob=new Blob([JSON.stringify(currentDraft(),null,2)],{type:'application/json'});
+ const url=URL.createObjectURL(blob),a=document.createElement('a');
+ a.href=url;a.download=($('projectTitle').value.trim()||'sceneforge-draft').replace(/[^\w-]+/g,'-')+'-draft.json';
+ a.click();setTimeout(()=>URL.revokeObjectURL(url),30000);
+});
+$('importDraft').addEventListener('change',async e=>{
+ const file=e.target.files?.[0];if(!file)return;
+ if(file.size>1024*1024){alert('Draft file is too large. Choose a SceneForge JSON draft under 1 MB.');e.target.value='';return}
+ try{
+  const draft=JSON.parse(await file.text());
+  if(!draft||typeof draft!=='object'||(draft.schemaVersion&&draft.schemaVersion!=='sceneforge.draft.v1'))throw new Error('Unsupported draft format');
+  localStorage.setItem(DRAFT_KEY,JSON.stringify(draft));
+  restoreDraft(draft);updateStats();saveDraft();
+  $('draftStatus').textContent='Draft imported successfully';
+ }catch(error){alert('Could not import this draft JSON: '+error.message)}
+ e.target.value='';
+});
 restoreDraft();$('statRuntime').textContent=formatTime(Number($('runtime').value)*60);$('runtimeLabel').textContent='Target: '+formatTime(Number($('runtime').value)*60);updateStats();
 })();
 </script>
